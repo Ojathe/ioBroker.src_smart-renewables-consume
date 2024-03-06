@@ -6,10 +6,31 @@
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 
+import { scheduleJob } from 'node-schedule';
+import {AnalyzerLack} from './lib/analyzer-lack';
+import {AnalyzerBonus} from './lib/analyzer-bonus';
+import {AverageValueHandler} from './lib/average-value-handler';
+import {
+	addSubscriptions,
+	createObjects,
+	XID_EEG_STATE_OPERATION,
+	XID_INGOING_BAT_LOAD,
+	XID_INGOING_BAT_SOC,
+	XID_INGOING_GRID_LOAD,
+	XID_INGOING_IS_GRID_BUYING,
+	XID_INGOING_PV_GENERATION,
+	XID_INGOING_SOLAR_RADIATION,
+	XID_INGOING_TOTAL_LOAD
+} from './lib/dp-handler';
+import {setStateAsBoolean} from './lib/util/state-util';
+
 // Load your modules here, e.g.:
 // import * as fs from "fs";
 
 class SrcSmartRenewablesConsume extends utils.Adapter {
+	private avgValueHandler: AverageValueHandler | undefined;
+	private analyzerBonus: AnalyzerBonus | undefined;
+	private analyzerLack: AnalyzerLack | undefined;
 
 	public constructor(options: Partial<utils.AdapterOptions> = {}) {
 		super({
@@ -30,55 +51,101 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 		// Initialize your adapter here
 
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
-		// this.config:
-		this.log.info('config option1: ' + this.config.option1);
-		this.log.info('config option2: ' + this.config.option2);
+		// TODO make sure that adapter will be restarted after config change
+		this.log.debug('config ' + this.config);
 
-		/*
-		For every state in the system there has to be also an object of type state
-		Here a simple template for a boolean variable named "testVariable"
-		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-		*/
-		await this.setObjectNotExistsAsync('testVariable', {
-			type: 'state',
-			common: {
-				name: 'testVariable',
-				type: 'boolean',
-				role: 'indicator',
-				read: true,
-				write: true,
-			},
-			native: {},
+		await createObjects(this);
+
+		addSubscriptions(this, this.config);
+
+		await setStateAsBoolean(this, XID_EEG_STATE_OPERATION, this.config.optionEnergyManagementActive);
+
+		// TODO Work in progress
+
+		[
+			this.config.optionSourcePvGeneration,
+			this.config.optionSourceBatterySoc,
+			this.config.optionSourceIsGridBuying,
+			this.config.optionSourceIsGridLoad,
+			this.config.optionSourceSolarRadiation,
+			this.config.optionSourceTotalLoad,
+			this.config.optionSourceBatteryLoad,
+		].forEach((externalId) => {
+			console.debug('initializing: ' + externalId);
+
+			this.updateIngoingValue(externalId);
 		});
 
-		// In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-		this.subscribeStates('testVariable');
-		// You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-		// this.subscribeStates('lights.*');
-		// Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-		// this.subscribeStates('*');
+		this.avgValueHandler = await AverageValueHandler.build(this);
+		this.analyzerBonus = new AnalyzerBonus(this, this.avgValueHandler);
+		this.analyzerLack = new AnalyzerLack(this, this.avgValueHandler);
 
-		/*
-			setState examples
-			you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-		*/
-		// the variable testVariable is set to true as command (ack=false)
-		await this.setStateAsync('testVariable', true);
+		// calculating average Values
+		// TODO make interval configurable
+		scheduleJob('*/20 * * * * *', () => {
+			console.debug('calculating average Values');
+			this.avgValueHandler!.calculate();
+		});
 
-		// same thing, but the value is flagged "ack"
-		// ack should be always set to true if the value is received from or acknowledged from the target system
-		await this.setStateAsync('testVariable', { val: true, ack: true });
-
-		// same thing, but the state is deleted after 30s (getState will return null afterwards)
-		await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
-
-		// examples for the checkPassword/checkGroup functions
-		let result = await this.checkPasswordAsync('admin', 'iobroker');
-		this.log.info('check user admin pw iobroker: ' + result);
-
-		result = await this.checkGroupAsync('admin', 'admin');
-		this.log.info('check group user admin group admin: ' + result);
+		scheduleJob('*/30 * * * * *', () => {
+			console.debug('C H E C K I N G   F O R   B O N U S  /  L A C K');
+			this.analyzerBonus!.run();
+			this.analyzerLack!.run();
+		});
 	}
+	// private async onReady(): Promise<void> {
+	// 	// Initialize your adapter here
+	//
+	// 	// The adapters config (in the instance object everything under the attribute "native") is accessible via
+	// 	// this.config:
+	// 	this.log.info('config option1: ' + this.config.option1);
+	// 	this.log.info('config option2: ' + this.config.option2);
+	//
+	// 	/*
+	// 	For every state in the system there has to be also an object of type state
+	// 	Here a simple template for a boolean variable named "testVariable"
+	// 	Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
+	// 	*/
+	// 	await this.setObjectNotExistsAsync('testVariable', {
+	// 		type: 'state',
+	// 		common: {
+	// 			name: 'testVariable',
+	// 			type: 'boolean',
+	// 			role: 'indicator',
+	// 			read: true,
+	// 			write: true,
+	// 		},
+	// 		native: {},
+	// 	});
+	//
+	// 	// In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
+	// 	// this.subscribeStates('testVariable');
+	// 	// You can also add a subscription for multiple states. The following line watches all states starting with "lights."
+	// 	// this.subscribeStates('lights.*');
+	// 	// Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
+	// 	// this.subscribeStates('*');
+	//
+	// 	/*
+	// 		setState examples
+	// 		you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
+	// 	*/
+	// 	// the variable testVariable is set to true as command (ack=false)
+	// 	// await this.setStateAsync('testVariable', true);
+	//
+	// 	// same thing, but the value is flagged "ack"
+	// 	// ack should be always set to true if the value is received from or acknowledged from the target system
+	// 	// await this.setStateAsync('testVariable', { val: true, ack: true });
+	//
+	// 	// same thing, but the state is deleted after 30s (getState will return null afterwards)
+	// 	// await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+	//
+	// 	// examples for the checkPassword/checkGroup functions
+	// 	// let result = await this.checkPasswordAsync('admin', 'iobroker');
+	// 	// this.log.info('check user admin pw iobroker: ' + result);
+	//
+	// 	// result = await this.checkGroupAsync('admin', 'admin');
+	// 	// this.log.info('check group user admin group admin: ' + result);
+	// }
 
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -112,19 +179,6 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// 	}
 	// }
 
-	/**
-	 * Is called if a subscribed state changes
-	 */
-	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
-		if (state) {
-			// The state was changed
-			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-		} else {
-			// The state was deleted
-			this.log.info(`state ${id} deleted`);
-		}
-	}
-
 	// If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
 	// /**
 	//  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
@@ -141,6 +195,65 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// 		}
 	// 	}
 	// }
+
+	/**
+	 * Is called if a subscribed state changes
+	 */
+	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
+		if (state) {
+			// The state was changed
+			//this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+
+			this.updateIngoingStateWithValue(id, state.val);
+		} else {
+			// The state was deleted
+			this.log.info(`state ${id} deleted`);
+		}
+	}
+
+	private updateIngoingStateWithValue(externalId: string, value: any): void {
+		const xidtoUpdate = this.getInnerStateXid(externalId);
+		if (xidtoUpdate) {
+			this.setState(xidtoUpdate, { val: value, ack: true });
+			console.debug(`Updating ingoing-value '${xidtoUpdate}' from '${externalId}' with '${value}'`);
+		}
+	}
+
+	private async updateIngoingValue(externalId: string): Promise<void> {
+		const state = await this.getForeignStateAsync(externalId);
+
+		console.debug('state', state);
+		this.updateIngoingStateWithValue(externalId, state?.val);
+	}
+
+	private getInnerStateXid(externalId: string): string | undefined {
+		let xidtoUpdate;
+		switch (externalId) {
+			case this.config.optionSourcePvGeneration:
+				xidtoUpdate = XID_INGOING_PV_GENERATION;
+				break;
+			case this.config.optionSourceBatterySoc:
+				xidtoUpdate = XID_INGOING_BAT_SOC;
+				break;
+			case this.config.optionSourceIsGridBuying:
+				xidtoUpdate = XID_INGOING_IS_GRID_BUYING;
+				break;
+			case this.config.optionSourceIsGridLoad:
+				xidtoUpdate = XID_INGOING_GRID_LOAD;
+				break;
+			case this.config.optionSourceSolarRadiation:
+				xidtoUpdate = XID_INGOING_SOLAR_RADIATION;
+				break;
+			case this.config.optionSourceTotalLoad:
+				xidtoUpdate = XID_INGOING_TOTAL_LOAD;
+				break;
+			case this.config.optionSourceBatteryLoad:
+				xidtoUpdate = XID_INGOING_BAT_LOAD;
+				break;
+		}
+
+		return xidtoUpdate;
+	}
 
 }
 
