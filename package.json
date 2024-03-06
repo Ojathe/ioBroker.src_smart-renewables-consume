@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "description": "This adapter helps you to controll your smarthome to use renewable generated energy in the best way",
   "author": {
-    "name": "kjub87",
+    "name": "ojathe",
     "email": "oliver.jathe@gmx.de"
   },
   "contributors": [
     {
-      "name": "kjub87"
+      "name": "olliJathe"
     }
   ],
   "homepage": "https://github.com/kjub87/ioBroker.src_smart-renewables-consume",
