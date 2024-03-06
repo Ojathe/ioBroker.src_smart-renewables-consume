@@ -11,7 +11,7 @@
       "name": "olliJathe"
     }
   ],
-  "homepage": "https://github.com/kjub87/ioBroker.src_smart-renewables-consume",
+  "homepage": "https://github.com/ojathe/ioBroker.src_smart-renewables-consume",
   "license": "MIT",
   "keywords": [
     "energy",
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kjub87/ioBroker.src_smart-renewables-consume.git"
+    "url": "https://github.com/ojathe/ioBroker.src_smart-renewables-consume.git"
   },
   "engines": {
     "node": ">= 20"
@@ -97,7 +97,7 @@
     "release": "release-script"
   },
   "bugs": {
-    "url": "https://github.com/kjub87/ioBroker.src_smart-renewables-consume/issues"
+    "url": "https://github.com/ojathe/ioBroker.src_smart-renewables-consume/issues"
   },
   "readmeFilename": "README.md"
 }
