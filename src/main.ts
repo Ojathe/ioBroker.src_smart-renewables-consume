@@ -6,7 +6,7 @@
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 
-import { scheduleJob } from 'node-schedule';
+import {scheduleJob} from 'node-schedule';
 import {AnalyzerLack} from './lib/analyzer-lack';
 import {AnalyzerBonus} from './lib/analyzer-bonus';
 import {AverageValueHandler} from './lib/average-value-handler';
@@ -45,8 +45,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	}
 
 	/**
-	 * Is called when databases are connected and adapter received configuration.
-	 */
+     * Is called when databases are connected and adapter received configuration.
+     */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
 
@@ -61,8 +61,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 		await setStateAsBoolean(this, XID_EEG_STATE_OPERATION, this.config.optionEnergyManagementActive);
 
 		// TODO Work in progress
-
-		[
+		const configToMap = [
 			this.config.optionSourcePvGeneration,
 			this.config.optionSourceBatterySoc,
 			this.config.optionSourceIsGridBuying,
@@ -70,11 +69,13 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			this.config.optionSourceSolarRadiation,
 			this.config.optionSourceTotalLoad,
 			this.config.optionSourceBatteryLoad,
-		].forEach((externalId) => {
-			console.debug('initializing: ' + externalId);
+		];
 
-			this.updateIngoingValue(externalId);
-		});
+		for (const externalId in configToMap) {
+			console.debug('initializing: ' + externalId);
+			await this.updateIngoingValue(externalId);
+		}
+
 
 		this.avgValueHandler = await AverageValueHandler.build(this);
 		this.analyzerBonus = new AnalyzerBonus(this, this.avgValueHandler);
@@ -93,6 +94,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			this.analyzerLack!.run();
 		});
 	}
+
 	// private async onReady(): Promise<void> {
 	// 	// Initialize your adapter here
 	//
@@ -148,8 +150,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// }
 
 	/**
-	 * Is called when adapter shuts down - callback has to be called under any circumstances!
-	 */
+     * Is called when adapter shuts down - callback has to be called under any circumstances!
+     */
 	private onUnload(callback: () => void): void {
 		try {
 			// Here you must clear all timeouts or intervals that may still be active
@@ -197,8 +199,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// }
 
 	/**
-	 * Is called if a subscribed state changes
-	 */
+     * Is called if a subscribed state changes
+     */
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		if (state) {
 			// The state was changed
@@ -214,7 +216,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	private updateIngoingStateWithValue(externalId: string, value: any): void {
 		const xidtoUpdate = this.getInnerStateXid(externalId);
 		if (xidtoUpdate) {
-			this.setState(xidtoUpdate, { val: value, ack: true });
+			this.setState(xidtoUpdate, {val: value, ack: true});
 			console.debug(`Updating ingoing-value '${xidtoUpdate}' from '${externalId}' with '${value}'`);
 		}
 	}

@@ -1,4 +1,4 @@
-import { AdapterInstance } from '@iobroker/adapter-core';
+import {AdapterInstance} from '@iobroker/adapter-core';
 
 export const XID_INGOING_PV_GENERATION = 'ingoing.pv-generation';
 export const XID_INGOING_TOTAL_LOAD = 'ingoing.total-load';
@@ -23,12 +23,12 @@ async function createObject<T extends ioBroker.StateValue>(
 	typeName: ioBroker.CommonType,
 	defaultValue: T,
 	props?: CreateStateProps,
-	accessProps: AccessProps = { read: true, write: true },
+	accessProps: AccessProps = {read: true, write: true},
 ): Promise<void> {
 	/*	For every state in the system there has to be also an object of type state
-		Here a simple template for a boolean variable named "testVariable"
-		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-		*/
+        Here a simple template for a boolean variable named "testVariable"
+        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
+        */
 	await context.setObjectNotExistsAsync(name, {
 		type: 'state',
 		common: {
@@ -51,7 +51,7 @@ async function createObject<T extends ioBroker.StateValue>(
 	// Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
 	// this.subscribeStates('*');
 
-	await context.setStateAsync(name, { val: defaultValue, ack: true });
+	await context.setStateAsync(name, {val: defaultValue, ack: true});
 }
 
 export async function createObjectString(
@@ -71,7 +71,7 @@ export async function createObjectBool(
 	props?: CreateStateProps,
 	accessProps?: AccessProps,
 ): Promise<void> {
-	await createObject<boolean>(adapter, name, 'string', defaultValue, props, accessProps);
+	await createObject<boolean>(adapter, name, 'boolean', defaultValue, props, accessProps);
 }
 
 export async function createObjectNum(
