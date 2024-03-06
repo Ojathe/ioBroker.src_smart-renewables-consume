@@ -1,0 +1,99 @@
+{
+	"common": {
+		"name": "src_smart-renewables-consume",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"uk": "Початкова версія",
+				"zh-cn": "首次出版"
+			}
+		},
+		"title": "Smart renewables consume",
+		"titleLang": {
+			"en": "Smart renewables consume",
+			"de": "Intelligente erneuerbare Energien verbrauchen",
+			"ru": "Умные возобновляемые источники энергии потребляют",
+			"pt": "Consumo inteligente de energias renováveis",
+			"nl": "Slimme hernieuwbare energiebronnen consumeren",
+			"fr": "Les énergies renouvelables intelligentes consomment",
+			"it": "Le energie rinnovabili intelligenti consumano",
+			"es": "Las energías renovables inteligentes consumen",
+			"pl": "Inteligentne odnawialne źródła energii zużywają",
+			"uk": "Розумні відновлювані джерела енергії споживають",
+			"zh-cn": "智能可再生能源消耗"
+		},
+		"desc": {
+			"en": "This adapter helps you to controll your smarthome to use renewable generated energy in the best way",
+			"de": "Dieser Adapter hilft Ihnen, Ihr Smarthome so zu steuern, dass es erneuerbare erzeugte Energie optimal nutzt",
+			"ru": "Этот адаптер поможет вам управлять своим умным домом, чтобы наилучшим образом использовать возобновляемую энергию.",
+			"pt": "Este adaptador ajuda você a controlar seu smarthome para usar a energia gerada renovável da melhor maneira",
+			"nl": "Deze adapter helpt u uw smarthome te besturen, zodat u op de beste manier gebruik kunt maken van duurzaam opgewekte energie",
+			"fr": "Cet adaptateur vous aide à contrôler votre maison intelligente pour utiliser au mieux l'énergie générée par les énergies renouvelables.",
+			"it": "Questo adattatore ti aiuta a controllare la tua casa intelligente per utilizzare l'energia generata da fonti rinnovabili nel modo migliore",
+			"es": "Este adaptador te ayuda a controlar tu hogar inteligente para utilizar la energía generada de forma renovable de la mejor manera.",
+			"pl": "Dzięki temu adapterowi możesz sterować swoim inteligentnym domem tak, aby jak najlepiej wykorzystywać energię odnawialną",
+			"uk": "Цей адаптер допоможе вам контролювати свій розумний будинок, щоб найкращим чином використовувати відновлювану енергію",
+			"zh-cn": "该适配器可帮助您控制智能家居以最佳方式使用可再生能源"
+		},
+		"authors": [
+			"kjub87 <oliver.jathe@gmx.de>"
+		],
+		"keywords": [
+			"energy",
+			"renewable",
+			"controller",
+			"pv"
+		],
+		"license": "MIT",
+		"licenseInformation": {
+			"type": "free",
+			"license": "MIT"
+		},
+		"platform": "Javascript/Node.js",
+		"main": "build/main.js",
+		"icon": "src_smart-renewables-consume.png",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/kjub87/ioBroker.src_smart-renewables-consume/main/admin/src_smart-renewables-consume.png",
+		"readme": "https://github.com/kjub87/ioBroker.src_smart-renewables-consume/blob/main/README.md",
+		"loglevel": "info",
+		"tier": 3,
+		"restartAdapters": [
+			"vis"
+		],
+		"mode": "daemon",
+		"type": "iot-systems",
+		"compact": true,
+		"connectionType": "local",
+		"dataSource": "poll",
+		"adminUI": {
+			"config": "materialize"
+		},
+		"eraseOnUpload": true,
+		"dependencies": [
+			{
+				"js-controller": ">=3.3.22"
+			},
+			"vis"
+		],
+		"globalDependencies": [
+			{
+				"admin": ">=5.0.0"
+			}
+		]
+	},
+	"native": {
+		"option1": true,
+		"option2": "42"
+	},
+	"objects": [],
+	"instanceObjects": []
+}
