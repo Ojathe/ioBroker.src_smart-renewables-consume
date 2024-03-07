@@ -69,7 +69,7 @@ async function createObjectString(adapter, name, defaultValue = "", props, acces
   await createObject(adapter, name, "string", defaultValue, props, accessProps);
 }
 async function createObjectBool(adapter, name, defaultValue = false, props, accessProps) {
-  await createObject(adapter, name, "string", defaultValue, props, accessProps);
+  await createObject(adapter, name, "boolean", defaultValue, props, accessProps);
 }
 async function createObjectNum(adapter, name, defaultValue = 0, props, accessProps) {
   await createObject(adapter, name, "number", defaultValue, props, accessProps);

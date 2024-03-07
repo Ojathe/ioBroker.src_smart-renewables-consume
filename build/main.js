@@ -42,14 +42,14 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
   /**
-   * Is called when databases are connected and adapter received configuration.
-   */
+      * Is called when databases are connected and adapter received configuration.
+      */
   async onReady() {
     this.log.debug("config " + this.config);
     await (0, import_dp_handler.createObjects)(this);
     (0, import_dp_handler.addSubscriptions)(this, this.config);
     await (0, import_state_util.setStateAsBoolean)(this, import_dp_handler.XID_EEG_STATE_OPERATION, this.config.optionEnergyManagementActive);
-    [
+    const configToMap = [
       this.config.optionSourcePvGeneration,
       this.config.optionSourceBatterySoc,
       this.config.optionSourceIsGridBuying,
@@ -57,10 +57,12 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
       this.config.optionSourceSolarRadiation,
       this.config.optionSourceTotalLoad,
       this.config.optionSourceBatteryLoad
-    ].forEach((externalId) => {
+    ];
+    console.log("configToMap", configToMap);
+    for (const externalId of configToMap) {
       console.debug("initializing: " + externalId);
-      this.updateIngoingValue(externalId);
-    });
+      await this.updateIngoingValue(externalId);
+    }
     this.avgValueHandler = await import_average_value_handler.AverageValueHandler.build(this);
     this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this, this.avgValueHandler);
     this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this, this.avgValueHandler);
@@ -128,8 +130,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
   // 	// this.log.info('check group user admin group admin: ' + result);
   // }
   /**
-   * Is called when adapter shuts down - callback has to be called under any circumstances!
-   */
+      * Is called when adapter shuts down - callback has to be called under any circumstances!
+      */
   onUnload(callback) {
     try {
       callback();
@@ -167,8 +169,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
   // 	}
   // }
   /**
-   * Is called if a subscribed state changes
-   */
+      * Is called if a subscribed state changes
+      */
   onStateChange(id, state) {
     if (state) {
       this.updateIngoingStateWithValue(id, state.val);

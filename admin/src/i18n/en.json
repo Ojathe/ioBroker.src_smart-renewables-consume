@@ -1,5 +1,13 @@
 {
 	"src_smart-renewables-consume adapter settings": "Adapter settings for src_smart-renewables-consume",
-	"option1": "option1",
-	"option2": "option2"
+	"optionInstanceInfluxDb": "optionInstanceInfluxDb",
+	"optionInstanceHistory": "optionInstanceHistory",
+	"optionEnergyManagementActive": "optionEnergyManagementActive",
+	"optionSourcePvGeneration": "optionSourcePvGeneration",
+	"optionSourceTotalLoad": "optionSourceTotalLoad",
+	"optionSourceBatterySoc": "OptionSourceBatterySoc",
+	"optionSourceSolarRadiation": "OptionSourceSolarRadiation",
+	"optionSourceIsGridBuying": "optionSourceIsGridBuying",
+	"optionSourceIsGridLoad": "optionSourceIsGridLoad",
+	"optionSourceBatteryLoad": "optionSourceBatteryLoad"
 }
