@@ -71,7 +71,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			this.config.optionSourceBatteryLoad,
 		];
 
-		for (const externalId in configToMap) {
+		for (const externalId of configToMap) {
 			console.debug('initializing: ' + externalId);
 			await this.updateIngoingValue(externalId);
 		}
