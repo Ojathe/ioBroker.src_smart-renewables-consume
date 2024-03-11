@@ -58,7 +58,7 @@ class AnalyzerLack {
     } else {
       console.debug(msg);
     }
-    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_LOSS, powerLack);
+    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_LOSS, powerLack, true);
   }
 }
 // Annotate the CommonJS export names for ESM import in node:

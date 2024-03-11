@@ -76,7 +76,6 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			await this.updateIngoingValue(externalId);
 		}
 
-
 		this.avgValueHandler = await AverageValueHandler.build(this);
 		this.analyzerBonus = new AnalyzerBonus(this, this.avgValueHandler);
 		this.analyzerLack = new AnalyzerLack(this, this.avgValueHandler);

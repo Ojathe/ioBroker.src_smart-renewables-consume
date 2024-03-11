@@ -51,10 +51,10 @@ export class AnalyzerBonus {
 
 		// update battery stand of charge
 		if (powerBonus) {
-			await this.adapter.setStateAsync(XID_EEG_STATE_SOC_LAST_BONUS, batSoc);
+			await this.adapter.setStateAsync(XID_EEG_STATE_SOC_LAST_BONUS, batSoc,true);
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(XID_EEG_STATE_BONUS, powerBonus);
+		await this.adapter.setStateAsync(XID_EEG_STATE_BONUS, powerBonus,true);
 	}
 }

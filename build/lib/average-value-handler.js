@@ -107,7 +107,7 @@ class AverageValueHandler {
       sourceVal = await item.mutation(sourceVal);
     }
     console.debug(`Updating Current Value (${sourceVal}) with xid: ${item.xidCurrent}`);
-    await this.adapter.setStateAsync(item.xidCurrent, sourceVal);
+    await this.adapter.setStateAsync(item.xidCurrent, sourceVal, true);
     try {
       const end = Date.now();
       const start10Min = end - 60 * 1e3 * 10;
@@ -136,7 +136,7 @@ class AverageValueHandler {
     }
   }
   async calculateAvgValue(values, xidTarget, startInMs = 0) {
-    values = values.filter((item) => item.val > 0 && item.ts >= startInMs);
+    values = values.filter((item) => item.ts >= startInMs);
     const { sum, count, avg } = calculateAverageValue(values);
     console.debug(`Updating Average Value ( ${avg} ) (sum: ${sum}, count: ${count}) with xid: ` + xidTarget);
     await this.adapter.setStateAsync(xidTarget, { val: avg, ack: true });

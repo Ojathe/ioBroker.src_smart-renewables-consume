@@ -68,6 +68,6 @@ export class AnalyzerLack {
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(XID_EEG_STATE_LOSS, powerLack);
+		await this.adapter.setStateAsync(XID_EEG_STATE_LOSS, powerLack, true);
 	}
 }

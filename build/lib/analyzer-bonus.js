@@ -56,9 +56,9 @@ class AnalyzerBonus {
       console.debug(msg);
     }
     if (powerBonus) {
-      await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_SOC_LAST_BONUS, batSoc);
+      await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_SOC_LAST_BONUS, batSoc, true);
     }
-    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_BONUS, powerBonus);
+    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_BONUS, powerBonus, true);
   }
 }
 // Annotate the CommonJS export names for ESM import in node:
