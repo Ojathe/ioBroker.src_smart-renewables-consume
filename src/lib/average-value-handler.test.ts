@@ -15,7 +15,91 @@ import {
 
 const { adapter, database } = utils.unit.createMocks({});
 
-describe('average-value.handler', () => {
+describe('AverageValueHandler', () => {
+	const currentTestCaseSolutions: Array<CurrentTestSolution<any>> = [
+		createCurrentTestCase({
+			function: 'powerDif',
+			testCases: [
+				{
+					expectation: 1,
+					states: [
+						[XID_INGOING_TOTAL_LOAD, 2],
+						[XID_INGOING_PV_GENERATION, 3],
+					],
+				},
+				{
+					expectation: 0,
+					states: [
+						[XID_INGOING_TOTAL_LOAD, 2],
+						[XID_INGOING_PV_GENERATION, 2],
+					],
+				},
+				{
+					expectation: -1,
+					states: [
+						[XID_INGOING_TOTAL_LOAD, 3],
+						[XID_INGOING_PV_GENERATION, 2],
+					],
+				},
+			],
+		}),
+		createCurrentTestCase({
+			function: 'powerGrid',
+			testCases: [
+				{
+					expectation: 2,
+					states: [
+						[XID_INGOING_GRID_LOAD, 2],
+						[XID_INGOING_IS_GRID_BUYING, false],
+					],
+				},
+				{
+					expectation: 0,
+					states: [
+						[XID_INGOING_GRID_LOAD, 0],
+						[XID_INGOING_IS_GRID_BUYING, false],
+					],
+				},
+				{
+					expectation: 0,
+					states: [
+						[XID_INGOING_GRID_LOAD, 0],
+						[XID_INGOING_IS_GRID_BUYING, true],
+					],
+				},
+				{
+					expectation: -2,
+					states: [
+						[XID_INGOING_GRID_LOAD, 2],
+						[XID_INGOING_IS_GRID_BUYING, true],
+					],
+				},
+			],
+		}),
+		createCurrentTestCase({
+			function: 'powerPv',
+			testCases: [
+				{
+					expectation: 2,
+					states: [[XID_INGOING_PV_GENERATION, 2]],
+				},
+			],
+		}),
+		createCurrentTestCase({
+			function: 'solar',
+			testCases: [
+				{
+					expectation: 0,
+					states: [[XID_INGOING_SOLAR_RADIATION, 0]],
+				},
+				{
+					expectation: 200,
+					states: [[XID_INGOING_SOLAR_RADIATION, 200]],
+				},
+			],
+		}),
+	];
+
 	const sandbox = sinon.createSandbox();
 	afterEach(() => {
 		// The mocks keep track of all method invocations - reset them after each single test
@@ -30,8 +114,9 @@ describe('average-value.handler', () => {
 		return await AverageValueHandler.build(adapter as unknown as AdapterInstance);
 	};
 
-	describe('build()', () => {
-		const testCases = [
+	const stateMap: Map<AggregatFunction, [string, object | undefined]> = new Map([
+		[
+			'solar',
 			[
 				'solar-radiation',
 				{
@@ -40,6 +125,9 @@ describe('average-value.handler', () => {
 					unit: 'wm²',
 				},
 			],
+		],
+		[
+			'powerPv',
 			[
 				'power-pv',
 				{
@@ -48,6 +136,9 @@ describe('average-value.handler', () => {
 					unit: 'kW',
 				},
 			],
+		],
+		[
+			'batLoad',
 			[
 				'bat-load',
 				{
@@ -56,36 +147,31 @@ describe('average-value.handler', () => {
 					unit: 'kW',
 				},
 			],
-			['power-dif'],
-			['power-grid'],
-		];
-
-		testCases.forEach((testCase) => {
-			it(`should create avg-value for ${testCase[0]} `, async () => {
+		],
+		['powerDif', ['power-dif', undefined]],
+		['powerGrid', ['power-grid', undefined]],
+	]);
+	for (const testSolution of currentTestCaseSolutions) {
+		describe(testSolution.function, () => {
+			it('build() creates avg-value state', async () => {
 				// Arrange & Act
-				const avgValueStub = sandbox
-					.stub(AverageValue, 'build')
-					.returns('mock' as unknown as Promise<AverageValue>);
+				const avgValueStub = sandbox.stub(AverageValue, 'build').returns('mock' as unknown as Promise<AverageValue>);
+
 				const handler = await initHandler();
 
 				//Assert
+				const stateCreationExpectation = stateMap.get(testSolution.function);
 				expect(handler).not.to.be.undefined;
-				expect(avgValueStub).to.be.calledWith(adapter, ...testCase);
+
+				if (stateCreationExpectation![1] !== undefined) {
+					expect(avgValueStub).to.be.calledWith(adapter, stateCreationExpectation![0], stateCreationExpectation![1]);
+				} else {
+					expect(avgValueStub).to.be.calledWith(adapter, stateCreationExpectation![0]);
+				}
 			});
-		});
-	});
 
-	describe('calculate()', () => {
-		const testCases = [
-			{ selector: (handler: AverageValueHandler) => handler.powerDif, name: 'powerDif' },
-			{ selector: (handler: AverageValueHandler) => handler.powerGrid, name: 'powerGrid' },
-			{ selector: (handler: AverageValueHandler) => handler.powerPv, name: 'powerPv' },
-			{ selector: (handler: AverageValueHandler) => handler.solar, name: 'solar' },
-		];
-
-		describe('history access', async () => {
-			testCases.forEach((testCase) => {
-				it(`should call getHistory for ${testCase.name} current`, async () => {
+			describe('calculate()', () => {
+				it(`History is accessed`, async () => {
 					//Arrange
 					const handler = await initHandler();
 
@@ -94,153 +180,32 @@ describe('average-value.handler', () => {
 
 					//Assert
 					expect(adapter.sendTo).to.be.calledWithMatch('history.0', 'getHistory', {
-						id: `${adapter.name}.${adapter.instance}.${testCase.selector(handler).xidCurrent}`,
+						id: `${adapter.name}.${adapter.instance}.${handler[testSolution.function].xidCurrent}`,
 					});
 				});
-			});
-		});
 
-		describe('current states calculation', () => {
-			it('should calculate correctly for powerDif (positive)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_TOTAL_LOAD, 2);
-				await adapter.setStateAsync(XID_INGOING_PV_GENERATION, 3);
+				for (const currentCase of testSolution.testCases) {
+					const stateDescription = currentCase.states.map((state) => `${state.xid}=${state.value}`).join(', ');
+					it(`Statesituation '${stateDescription}' udaptes 'current' to ${currentCase.expectation}`, async () => {
+						const handler = await initHandler();
+						for (const state of currentCase.states) {
+							await adapter.setStateAsync(state.xid, state.value);
+						}
+						await handler.calculate();
+						expect(await handler[testSolution.function].getCurrent()).to.eq(currentCase.expectation);
+					});
+				}
 
-				// act
-				await handler.calculate();
+				const mockedHistory = [
+					{ ts: Date.now(), val: 20 },
+					{ ts: Date.now() - 4 * 1000 * 60, val: 10 },
+					{ ts: Date.now() - 8 * 1000 * 60, val: 5 },
+				];
 
-				// assert
-				expect(await handler.powerDif.getCurrent()).to.eq(1);
-			});
-
-			it('should calculate correctly for powerDif (neutral)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_TOTAL_LOAD, 2);
-				await adapter.setStateAsync(XID_INGOING_PV_GENERATION, 2);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerDif.getCurrent()).to.eq(0);
-			});
-
-			it('should calculate correctly for powerDif (negative)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_TOTAL_LOAD, 3);
-				await adapter.setStateAsync(XID_INGOING_PV_GENERATION, 2);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerDif.getCurrent()).to.eq(-1);
-			});
-
-			it('should calculate correctly for powerGrid (positive)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_GRID_LOAD, 2);
-				await adapter.setStateAsync(XID_INGOING_IS_GRID_BUYING, false);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerGrid.getCurrent()).to.eq(2);
-			});
-
-			it('should calculate correctly for powerGrid (neutral 1)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_GRID_LOAD, 0);
-				await adapter.setStateAsync(XID_INGOING_IS_GRID_BUYING, false);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerGrid.getCurrent()).to.eq(0);
-			});
-
-			it('should calculate correctly for powerGrid (neutral 2)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_GRID_LOAD, 0);
-				await adapter.setStateAsync(XID_INGOING_IS_GRID_BUYING, true);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerGrid.getCurrent()).to.eq(0);
-			});
-
-			it('should calculate correctly for powerGrid (negative)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_GRID_LOAD, 2);
-				await adapter.setStateAsync(XID_INGOING_IS_GRID_BUYING, true);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerGrid.getCurrent()).to.eq(-2);
-			});
-
-			it('should calculate correctly for powerPv (positive)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_PV_GENERATION, 2);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.powerPv.getCurrent()).to.eq(2);
-			});
-
-			it('should calculate correctly for solar (neutral)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_SOLAR_RADIATION, 0);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.solar.getCurrent()).to.eq(0);
-			});
-
-			it('should calculate correctly for solar (positive)', async () => {
-				//arrange
-				const handler = await initHandler();
-				await adapter.setStateAsync(XID_INGOING_SOLAR_RADIATION, 200);
-
-				// act
-				await handler.calculate();
-
-				// assert
-				expect(await handler.solar.getCurrent()).to.eq(200);
-			});
-		});
-
-		describe('state update', async () => {
-			const mockedHistory = [
-				{ ts: Date.now(), val: 20 },
-				{ ts: Date.now() - 4 * 1000 * 60, val: 10 },
-				{ ts: Date.now() - 8 * 1000 * 60, val: 5 },
-			];
-
-			testCases.forEach(async (testCase) => {
-				it(`_ should call setState 3 times for ${testCase.name}`, async () => {
+				it(`updates all 3 values (current, 5min & 10min)`, async () => {
 					//Arrange
 					const handler = await initHandler();
-					const avgVal = testCase.selector(handler);
+					const avgVal = handler[testSolution.function];
 					adapter.sendToAsync.resolves({ result: mockedHistory });
 
 					//Act
@@ -259,7 +224,7 @@ describe('average-value.handler', () => {
 				});
 			});
 		});
-	});
+	}
 
 	describe('calculateAverageValue()', () => {
 		it('should return 0 for empty list', () => {
@@ -285,3 +250,30 @@ describe('average-value.handler', () => {
 		});
 	});
 });
+
+type AggregatFunction = keyof AverageValueHandler & ('powerDif' | 'powerGrid' | 'powerPv' | 'solar' | 'batLoad');
+
+type CurrentTestSolutionTemplate<T> = {
+	function: AggregatFunction;
+	testCases: Array<{ states: Array<[string, T | unknown]>; expectation: T }>;
+};
+
+type CurrentTestSolution<T> = {
+	function: AggregatFunction;
+	testCases: Array<CurrentTestCase<T>>;
+};
+
+type CurrentTestCase<T> = {
+	states: Array<{ xid: string; value: T | unknown }>;
+	expectation: T;
+};
+
+function createCurrentTestCase<T>(template: CurrentTestSolutionTemplate<T>) {
+	return {
+		function: template.function,
+		testCases: template.testCases.map((templateCase) => ({
+			expectation: templateCase.expectation,
+			states: templateCase.states.map((templateStates) => ({ xid: templateStates[0], value: templateStates[1] })),
+		})),
+	};
+}
