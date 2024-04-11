@@ -1,6 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { createObjectNum } from './dp-handler';
 import { getStateAsNumber } from './util/state-util';
+import { createObjectNum } from '../util/create-objects-helper';
 
 // TODO instance number and other values configurable
 const customInflux = {
@@ -44,19 +44,6 @@ export class AverageValue {
 	public readonly xidSource?: string;
 	public readonly name: string;
 	public readonly desc?: string;
-	private _xidCurrent = '';
-	public get xidCurrent(): string {
-		return this._xidCurrent;
-	}
-	private _xidAvg = '';
-	public get xidAvg(): string {
-		return this._xidAvg;
-	}
-	private _xidAvg5 = '';
-	public get xidAvg5(): string {
-		return this._xidAvg5;
-	}
-
 	public readonly mutation?: (number: number) => Promise<number>;
 
 	private constructor(
@@ -73,6 +60,24 @@ export class AverageValue {
 		if (!this.mutation && !this.xidSource) {
 			throw new Error(`${name}: Es dürfen nicht xidSource UND Mutation undefniert sein!`);
 		}
+	}
+
+	private _xidCurrent = '';
+
+	public get xidCurrent(): string {
+		return this._xidCurrent;
+	}
+
+	private _xidAvg = '';
+
+	public get xidAvg(): string {
+		return this._xidAvg;
+	}
+
+	private _xidAvg5 = '';
+
+	public get xidAvg5(): string {
+		return this._xidAvg5;
 	}
 
 	static async build(
@@ -97,6 +102,18 @@ export class AverageValue {
 		return val;
 	}
 
+	public async getCurrent(): Promise<number> {
+		return await this.getValue(this.xidCurrent);
+	}
+
+	public async get5Min(): Promise<number> {
+		return await this.getValue(this.xidAvg5);
+	}
+
+	public async get10Min(): Promise<number> {
+		return await this.getValue(this.xidAvg);
+	}
+
 	private createStates(
 		context: AdapterInstance,
 		subItem: string,
@@ -109,18 +126,6 @@ export class AverageValue {
 			custom: props?.custom,
 		});
 		return xid;
-	}
-
-	public async getCurrent(): Promise<number> {
-		return await this.getValue(this.xidCurrent);
-	}
-
-	public async get5Min(): Promise<number> {
-		return await this.getValue(this.xidAvg5);
-	}
-
-	public async get10Min(): Promise<number> {
-		return await this.getValue(this.xidAvg);
 	}
 
 	private async getValue(xid: string): Promise<number> {
