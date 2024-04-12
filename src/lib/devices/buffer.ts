@@ -7,3 +7,9 @@ export interface BufferConfig {
 export interface Buffer {
 
 }
+
+export class FourSensorsBuffer implements Buffer {
+	constructor(config: BufferConfig) {
+		console.log(config);
+	}
+}
