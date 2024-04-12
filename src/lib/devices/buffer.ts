@@ -4,4 +4,6 @@ export interface BufferConfig {
 	sensors: Array<XidNumber>;
 }
 
-export interface Buffer {}
+export interface Buffer {
+
+}
