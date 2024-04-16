@@ -4,7 +4,8 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
 import { AverageValueHandler } from './average-value-handler';
-import { XID_EEG_STATE_BONUS, XID_EEG_STATE_SOC_LAST_BONUS, XID_INGOING_BAT_SOC } from './dp-handler';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
+import { createMockedLandingZone } from './average-value-handler.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -28,16 +29,17 @@ describe('analyzer-bonus', () => {
 		const init = async (
 			props: { powerDifCurrent: number; powerDifAvg: number; powerGridAvg: number } = defaultProps,
 		) => {
+			await createMockedLandingZone(adapter);
 			const handler = await AverageValueHandler.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, handler);
 
-			adapter.setState(handler.powerDif.xidCurrent, props.powerDifCurrent);
-			adapter.setState(handler.powerDif.xidAvg, props.powerDifAvg);
-			adapter.setState(handler.powerGrid.xidAvg, props.powerGridAvg);
+			adapter.setState(handler.powerDif.current.xid, props.powerDifCurrent);
+			adapter.setState(handler.powerDif.avg.xid, props.powerDifAvg);
+			adapter.setState(handler.powerGrid.avg.xid, props.powerGridAvg);
 			return { handler, analyzer };
 		};
 
-		[XID_INGOING_BAT_SOC, XID_EEG_STATE_BONUS].forEach((testCase) => {
+		[EXTERNAL_STATE_LANDINGZONE.BAT_SOC, INTERNAL_STATE_EEG.BONUS].forEach((testCase) => {
 			it(`_ fetches ${testCase}`, async () => {
 				// arrange
 				const { analyzer } = await init();
@@ -91,18 +93,18 @@ describe('analyzer-bonus', () => {
 
 					// arrange
 					const { analyzer } = await init(testCase.props);
-					adapter.setState(XID_INGOING_BAT_SOC, testCase.bat);
+					adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, testCase.bat);
 
 					// act
 					await analyzer.run();
 
 					// assert
 					// update bonus itself
-					expect(adapter.setStateAsync).to.be.calledWith(XID_EEG_STATE_BONUS, false);
-					asserts.assertStateHasValue(XID_EEG_STATE_BONUS, false);
+					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.BONUS, false);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.BONUS, false);
 
 					// do not update last bonus battery charge
-					expect(adapter.setStateAsync).not.to.be.calledWith(XID_EEG_STATE_SOC_LAST_BONUS);
+					expect(adapter.setStateAsync).not.to.be.calledWith(INTERNAL_STATE_EEG.SOC_LAST_BONUS);
 				});
 			});
 		});
@@ -125,19 +127,19 @@ describe('analyzer-bonus', () => {
 
 					// arrange
 					const { analyzer } = await init(testCase.props);
-					adapter.setState(XID_INGOING_BAT_SOC, testCase.bat);
+					adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, testCase.bat);
 
 					// act
 					await analyzer.run();
 
 					// assert
 					// update bonus state itself
-					expect(adapter.setStateAsync).to.be.calledWith(XID_EEG_STATE_BONUS, true);
-					asserts.assertStateHasValue(XID_EEG_STATE_BONUS, true);
+					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.BONUS, true);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.BONUS, true);
 
 					// update battery stand of charge
-					expect(adapter.setStateAsync).to.be.calledWith(XID_EEG_STATE_SOC_LAST_BONUS, testCase.bat);
-					asserts.assertStateHasValue(XID_EEG_STATE_SOC_LAST_BONUS, testCase.bat);
+					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.SOC_LAST_BONUS, testCase.bat);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.SOC_LAST_BONUS, testCase.bat);
 				});
 			});
 		});

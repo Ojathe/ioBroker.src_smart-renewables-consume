@@ -1,21 +1,7 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
-import {
-	addSubscriptions,
-	createObjects,
-	XID_EEG_STATE_BONUS,
-	XID_EEG_STATE_LOSS,
-	XID_EEG_STATE_OPERATION,
-	XID_EEG_STATE_SOC_LAST_BONUS,
-	XID_INGOING_BAT_LOAD,
-	XID_INGOING_BAT_SOC,
-	XID_INGOING_GRID_LOAD,
-	XID_INGOING_IS_GRID_BUYING,
-	XID_INGOING_PV_GENERATION,
-	XID_INGOING_SOLAR_RADIATION,
-	XID_INGOING_TOTAL_LOAD,
-} from './dp-handler';
+import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
 
 const mockedPvGeneration = 'mockedPvGeneration';
 const mockedTotalLoad = 'mockedTotalLoad';
@@ -50,17 +36,17 @@ describe('dp-handler', () => {
 	});
 	describe('create Objects', () => {
 		[
-			XID_INGOING_PV_GENERATION,
-			XID_INGOING_TOTAL_LOAD,
-			XID_INGOING_BAT_SOC,
-			XID_INGOING_SOLAR_RADIATION,
-			XID_INGOING_IS_GRID_BUYING,
-			XID_INGOING_GRID_LOAD,
-			XID_INGOING_BAT_LOAD,
-			XID_EEG_STATE_BONUS,
-			XID_EEG_STATE_LOSS,
-			XID_EEG_STATE_SOC_LAST_BONUS,
-			XID_EEG_STATE_OPERATION,
+			EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
+			EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD,
+			EXTERNAL_STATE_LANDINGZONE.BAT_SOC,
+			EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION,
+			EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING,
+			EXTERNAL_STATE_LANDINGZONE.GRID_LOAD,
+			EXTERNAL_STATE_LANDINGZONE.BAT_LOAD,
+			INTERNAL_STATE_EEG.BONUS,
+			INTERNAL_STATE_EEG.LOSS,
+			INTERNAL_STATE_EEG.SOC_LAST_BONUS,
+			INTERNAL_STATE_EEG.OPERATION,
 		].forEach((testCase) => {
 			it(`should create state for ${testCase}`, async () => {
 				const asserts = utils.unit.createAsserts(database, adapter);

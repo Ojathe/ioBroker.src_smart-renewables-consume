@@ -1,7 +1,8 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { utils } from '@iobroker/testing';
+import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import { AverageValue } from './average-value';
+import { createObjectNum } from '../util/create-objects-helper';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -23,8 +24,13 @@ describe('AverageValue', () => {
 		const mockedAvg = 'avg.AverageValueUnderTest.last-10-min';
 		const mockedAvg5 = 'avg.AverageValueUnderTest.last-5-min';
 
+		const setup = async (adapter: MockAdapter) => {
+			await createObjectNum(adapter as unknown as AdapterInstance, mockedSource, 0);
+		};
+
 		it('should initialize correctly', async () => {
 			const asserts = utils.unit.createAsserts(database, adapter);
+			await setup(adapter);
 
 			const mutation = async (num: number) => {
 				return num;
@@ -39,18 +45,18 @@ describe('AverageValue', () => {
 
 			expect(avgValToTest).not.to.be.undefined;
 
-			expect(avgValToTest.xidSource).to.eq(mockedSource);
-			expect(avgValToTest.name).to.eq(mockedName);
+			expect(avgValToTest.source?.xid).to.eq(mockedSource);
+			expect(avgValToTest.propertyName).to.eq(mockedName);
 			expect(avgValToTest.desc).to.eq(mockedDesc);
-			expect(avgValToTest.xidCurrent).to.eq(mockedCurrent);
+			expect(avgValToTest.current.xid).to.eq(mockedCurrent);
 
-			expect(avgValToTest.xidAvg).to.eq(mockedAvg);
-			expect(avgValToTest.xidAvg5).to.eq(mockedAvg5);
+			expect(avgValToTest.avg.xid).to.eq(mockedAvg);
+			expect(avgValToTest.avg5.xid).to.eq(mockedAvg5);
 			expect(avgValToTest.mutation).to.eq(mutation);
 
-			asserts.assertStateHasValue(avgValToTest.xidCurrent, 0);
-			asserts.assertStateHasValue(avgValToTest.xidAvg, 0);
-			asserts.assertStateHasValue(avgValToTest.xidAvg5, 0);
+			asserts.assertStateHasValue(avgValToTest.current.xid, 0);
+			asserts.assertStateHasValue(avgValToTest.avg.xid, 0);
+			asserts.assertStateHasValue(avgValToTest.avg5.xid, 0);
 		});
 
 		it('should throw expection when no mutation and source are defined', async () => {
@@ -61,16 +67,17 @@ describe('AverageValue', () => {
 
 		it('should be able to read and write values ', async () => {
 			const asserts = utils.unit.createAsserts(database, adapter);
+			await setup(adapter);
 
 			const avgValToTest = await AverageValue.build(adapter as unknown as AdapterInstance, mockedName, {
 				xidSource: mockedSource,
 			});
-			asserts.assertStateExists(avgValToTest.xidCurrent);
-			await adapter.setStateAsync(avgValToTest.xidCurrent, 2);
+			asserts.assertStateExists(avgValToTest.current.xid);
+			await adapter.setStateAsync(avgValToTest.current.xid, 2);
 
 			// assert
-			asserts.assertStateHasValue(avgValToTest.xidCurrent, 2);
-			expect(await avgValToTest.getCurrent()).to.eq(2);
+			asserts.assertStateHasValue(avgValToTest.current.xid, 2);
+			expect(await avgValToTest.current.getValue()).to.eq(2);
 		});
 	});
 });

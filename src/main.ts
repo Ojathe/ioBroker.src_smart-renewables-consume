@@ -6,23 +6,12 @@
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 
-import {scheduleJob} from 'node-schedule';
-import {AnalyzerLack} from './lib/analyzer-lack';
-import {AnalyzerBonus} from './lib/analyzer-bonus';
-import {AverageValueHandler} from './lib/average-value-handler';
-import {
-	addSubscriptions,
-	createObjects,
-	XID_EEG_STATE_OPERATION,
-	XID_INGOING_BAT_LOAD,
-	XID_INGOING_BAT_SOC,
-	XID_INGOING_GRID_LOAD,
-	XID_INGOING_IS_GRID_BUYING,
-	XID_INGOING_PV_GENERATION,
-	XID_INGOING_SOLAR_RADIATION,
-	XID_INGOING_TOTAL_LOAD
-} from './lib/dp-handler';
-import {setStateAsBoolean} from './lib/util/state-util';
+import { scheduleJob } from 'node-schedule';
+import { AnalyzerLack } from './lib/analyzer-lack';
+import { AnalyzerBonus } from './lib/analyzer-bonus';
+import { AverageValueHandler } from './lib/average-value-handler';
+import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './lib/dp-handler';
+import { setStateAsBoolean } from './lib/util/state-util';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";
@@ -45,8 +34,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	}
 
 	/**
-     * Is called when databases are connected and adapter received configuration.
-     */
+	 * Is called when databases are connected and adapter received configuration.
+	 */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
 
@@ -58,7 +47,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 
 		addSubscriptions(this, this.config);
 
-		await setStateAsBoolean(this, XID_EEG_STATE_OPERATION, this.config.optionEnergyManagementActive);
+		await setStateAsBoolean(this, INTERNAL_STATE_EEG.OPERATION, this.config.optionEnergyManagementActive);
 
 		// TODO Work in progress
 		const configToMap = [
@@ -149,8 +138,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// }
 
 	/**
-     * Is called when adapter shuts down - callback has to be called under any circumstances!
-     */
+	 * Is called when adapter shuts down - callback has to be called under any circumstances!
+	 */
 	private onUnload(callback: () => void): void {
 		try {
 			// Here you must clear all timeouts or intervals that may still be active
@@ -198,8 +187,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	// }
 
 	/**
-     * Is called if a subscribed state changes
-     */
+	 * Is called if a subscribed state changes
+	 */
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		if (state) {
 			// The state was changed
@@ -215,7 +204,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 	private updateIngoingStateWithValue(externalId: string, value: any): void {
 		const xidtoUpdate = this.getInnerStateXid(externalId);
 		if (xidtoUpdate) {
-			this.setState(xidtoUpdate, {val: value, ack: true});
+			this.setState(xidtoUpdate, { val: value, ack: true });
 			console.debug(`Updating ingoing-value '${xidtoUpdate}' from '${externalId}' with '${value}'`);
 		}
 	}
@@ -231,25 +220,25 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 		let xidtoUpdate;
 		switch (externalId) {
 			case this.config.optionSourcePvGeneration:
-				xidtoUpdate = XID_INGOING_PV_GENERATION;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
 				break;
 			case this.config.optionSourceBatterySoc:
-				xidtoUpdate = XID_INGOING_BAT_SOC;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
 				break;
 			case this.config.optionSourceIsGridBuying:
-				xidtoUpdate = XID_INGOING_IS_GRID_BUYING;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
 				break;
 			case this.config.optionSourceIsGridLoad:
-				xidtoUpdate = XID_INGOING_GRID_LOAD;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
 				break;
 			case this.config.optionSourceSolarRadiation:
-				xidtoUpdate = XID_INGOING_SOLAR_RADIATION;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
 				break;
 			case this.config.optionSourceTotalLoad:
-				xidtoUpdate = XID_INGOING_TOTAL_LOAD;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
 				break;
 			case this.config.optionSourceBatteryLoad:
-				xidtoUpdate = XID_INGOING_BAT_LOAD;
+				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
 				break;
 		}
 

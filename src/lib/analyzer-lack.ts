@@ -1,13 +1,14 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValueHandler } from './average-value-handler';
-import { XID_EEG_STATE_LOSS, XID_INGOING_BAT_SOC } from './dp-handler';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
 
 export class AnalyzerLack {
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {}
-
 	// TODO move to config
 	public static readonly lackReportingThreshold = -0.5;
 	public static readonly gridBuyingThreshold = -0.2;
+
+	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {
+	}
 
 	public async run(): Promise<void> {
 		// TODO investigate on how to configure values
@@ -19,9 +20,9 @@ export class AnalyzerLack {
 		let powerLack = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDifAvg5 = await this.avgValueHandler.powerDif.get5Min();
-		const gridPowerAvg5 = await this.avgValueHandler.powerGrid.get5Min();
-		const batSoc = ((await this.adapter.getStateAsync(XID_INGOING_BAT_SOC))?.val as number) ?? 0;
+		const powerDifAvg5 = await this.avgValueHandler.powerDif.avg5.getValue();
+		const gridPowerAvg5 = await this.avgValueHandler.powerGrid.avg5.getValue();
+		const batSoc = ((await this.adapter.getStateAsync(EXTERNAL_STATE_LANDINGZONE.BAT_SOC))?.val as number) ?? 0;
 
 		// TODO PV Connection
 		// Mangel, wenn
@@ -59,7 +60,7 @@ export class AnalyzerLack {
 		}
 
 		const msg = `LackAnalysis # Lack GridPowerAvg5=${gridPowerAvg5} => PowerLack:${powerLack} SOC=${batSoc}`;
-		const reportedLack: boolean = ((await this.adapter.getStateAsync(XID_EEG_STATE_LOSS))?.val as boolean) ?? false;
+		const reportedLack: boolean = ((await this.adapter.getStateAsync(INTERNAL_STATE_EEG.LOSS))?.val as boolean) ?? false;
 
 		if (powerLack && !reportedLack) {
 			console.log(msg + ' || STATE CHANGED');
@@ -68,6 +69,6 @@ export class AnalyzerLack {
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(XID_EEG_STATE_LOSS, powerLack, true);
+		await this.adapter.setStateAsync(INTERNAL_STATE_EEG.LOSS, powerLack, true);
 	}
 }

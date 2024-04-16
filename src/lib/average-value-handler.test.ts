@@ -1,19 +1,23 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { utils } from '@iobroker/testing';
+import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AverageValue } from './average-value';
 import { AverageValueHandler, calculateAverageValue } from './average-value-handler';
-import {
-	XID_INGOING_BAT_LOAD,
-	XID_INGOING_GRID_LOAD,
-	XID_INGOING_IS_GRID_BUYING,
-	XID_INGOING_PV_GENERATION,
-	XID_INGOING_SOLAR_RADIATION,
-	XID_INGOING_TOTAL_LOAD,
-} from './dp-handler';
+import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
+import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
 
 const { adapter, database } = utils.unit.createMocks({});
+
+export async function createMockedLandingZone(adapter: MockAdapter) {
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION, 0);
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 0);
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.BAT_LOAD, 0);
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD, 0);
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 0);
+	await createObjectNum(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.GRID_LOAD, 0);
+	await createObjectBool(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, false);
+}
 
 describe('AverageValueHandler', () => {
 	const currentTestCaseSolutions: Array<CurrentTestSolution<any>> = [
@@ -23,22 +27,22 @@ describe('AverageValueHandler', () => {
 				{
 					expectation: 1,
 					states: [
-						[XID_INGOING_TOTAL_LOAD, 2],
-						[XID_INGOING_PV_GENERATION, 3],
+						[EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD, 2],
+						[EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 3],
 					],
 				},
 				{
 					expectation: 0,
 					states: [
-						[XID_INGOING_TOTAL_LOAD, 2],
-						[XID_INGOING_PV_GENERATION, 2],
+						[EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD, 2],
+						[EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 2],
 					],
 				},
 				{
 					expectation: -1,
 					states: [
-						[XID_INGOING_TOTAL_LOAD, 3],
-						[XID_INGOING_PV_GENERATION, 2],
+						[EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD, 3],
+						[EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 2],
 					],
 				},
 			],
@@ -49,29 +53,29 @@ describe('AverageValueHandler', () => {
 				{
 					expectation: 2,
 					states: [
-						[XID_INGOING_GRID_LOAD, 2],
-						[XID_INGOING_IS_GRID_BUYING, false],
+						[EXTERNAL_STATE_LANDINGZONE.GRID_LOAD, 2],
+						[EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, false],
 					],
 				},
 				{
 					expectation: 0,
 					states: [
-						[XID_INGOING_GRID_LOAD, 0],
-						[XID_INGOING_IS_GRID_BUYING, false],
+						[EXTERNAL_STATE_LANDINGZONE.GRID_LOAD, 0],
+						[EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, false],
 					],
 				},
 				{
 					expectation: 0,
 					states: [
-						[XID_INGOING_GRID_LOAD, 0],
-						[XID_INGOING_IS_GRID_BUYING, true],
+						[EXTERNAL_STATE_LANDINGZONE.GRID_LOAD, 0],
+						[EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, true],
 					],
 				},
 				{
 					expectation: -2,
 					states: [
-						[XID_INGOING_GRID_LOAD, 2],
-						[XID_INGOING_IS_GRID_BUYING, true],
+						[EXTERNAL_STATE_LANDINGZONE.GRID_LOAD, 2],
+						[EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, true],
 					],
 				},
 			],
@@ -81,7 +85,7 @@ describe('AverageValueHandler', () => {
 			testCases: [
 				{
 					expectation: 2,
-					states: [[XID_INGOING_PV_GENERATION, 2]],
+					states: [[EXTERNAL_STATE_LANDINGZONE.PV_GENERATION, 2]],
 				},
 			],
 		}),
@@ -90,11 +94,11 @@ describe('AverageValueHandler', () => {
 			testCases: [
 				{
 					expectation: 0,
-					states: [[XID_INGOING_SOLAR_RADIATION, 0]],
+					states: [[EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION, 0]],
 				},
 				{
 					expectation: 200,
-					states: [[XID_INGOING_SOLAR_RADIATION, 200]],
+					states: [[EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION, 200]],
 				},
 			],
 		}),
@@ -111,6 +115,7 @@ describe('AverageValueHandler', () => {
 	});
 
 	const initHandler = async () => {
+		await createMockedLandingZone(adapter);
 		return await AverageValueHandler.build(adapter as unknown as AdapterInstance);
 	};
 
@@ -121,7 +126,7 @@ describe('AverageValueHandler', () => {
 				'solar-radiation',
 				{
 					desc: 'Average solar radiation',
-					xidSource: XID_INGOING_SOLAR_RADIATION,
+					xidSource: EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION,
 					unit: 'wm²',
 				},
 			],
@@ -132,7 +137,7 @@ describe('AverageValueHandler', () => {
 				'power-pv',
 				{
 					desc: 'PV generation',
-					xidSource: XID_INGOING_PV_GENERATION,
+					xidSource: EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
 					unit: 'kW',
 				},
 			],
@@ -143,7 +148,7 @@ describe('AverageValueHandler', () => {
 				'bat-load',
 				{
 					desc: 'The Battery load (-) consuming / (+) charging',
-					xidSource: XID_INGOING_BAT_LOAD,
+					xidSource: EXTERNAL_STATE_LANDINGZONE.BAT_LOAD,
 					unit: 'kW',
 				},
 			],
@@ -180,7 +185,7 @@ describe('AverageValueHandler', () => {
 
 					//Assert
 					expect(adapter.sendTo).to.be.calledWithMatch('history.0', 'getHistory', {
-						id: `${adapter.name}.${adapter.instance}.${handler[testSolution.function].xidCurrent}`,
+						id: `${adapter.name}.${adapter.instance}.${handler[testSolution.function].current.xid}`,
 					});
 				});
 
@@ -192,7 +197,7 @@ describe('AverageValueHandler', () => {
 							await adapter.setStateAsync(state.xid, state.value);
 						}
 						await handler.calculate();
-						expect(await handler[testSolution.function].getCurrent()).to.eq(currentCase.expectation);
+						expect(await handler[testSolution.function].current.getValue()).to.eq(currentCase.expectation);
 					});
 				}
 
@@ -212,12 +217,12 @@ describe('AverageValueHandler', () => {
 					await handler.calculate();
 
 					//Assert
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.xidCurrent, { val: 0, ack: true });
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.xidAvg, {
+					expect(adapter.setStateAsync).to.be.calledWith(avgVal.current.xid, { val: 0, ack: true });
+					expect(adapter.setStateAsync).to.be.calledWith(avgVal.avg.xid, {
 						val: Math.round(((20 + 10 + 5) / 3) * 100) / 100,
 						ack: true,
 					});
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.xidAvg5, {
+					expect(adapter.setStateAsync).to.be.calledWith(avgVal.avg5.xid, {
 						val: Math.round(((20 + 10) / 2) * 100) / 100,
 						ack: true,
 					});

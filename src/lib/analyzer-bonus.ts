@@ -1,6 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValueHandler } from './average-value-handler';
-import { XID_EEG_STATE_BONUS, XID_EEG_STATE_SOC_LAST_BONUS, XID_INGOING_BAT_SOC } from './dp-handler';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
 import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
 
 export class AnalyzerBonus {
@@ -9,7 +9,8 @@ export class AnalyzerBonus {
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
 
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {}
+	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {
+	}
 
 	public async run(): Promise<void> {
 		// TODO investigate on how to configure values
@@ -18,12 +19,12 @@ export class AnalyzerBonus {
 		let powerBonus = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDif = await this.avgValueHandler.powerDif.getCurrent();
-		const powerDifAvg = await this.avgValueHandler.powerDif.get10Min();
+		const powerDif = await this.avgValueHandler.powerDif.current.getValue();
+		const powerDifAvg = await this.avgValueHandler.powerDif.avg.getValue();
 
-		const gridPowerAvg = await this.avgValueHandler.powerGrid.get10Min();
+		const gridPowerAvg = await this.avgValueHandler.powerGrid.avg.getValue();
 
-		const batSoc = (await getStateAsNumber(this.adapter, XID_INGOING_BAT_SOC)) ?? 0;
+		const batSoc = (await getStateAsNumber(this.adapter, EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) ?? 0;
 
 		// bonus when positive power balance
 		if (gridPowerAvg > AnalyzerBonus.sellingThreshold) {
@@ -42,7 +43,7 @@ export class AnalyzerBonus {
 
 		const msg = `BonusAnalysis # Bonus PowerDif=${powerDif} PowerDifAvg=${powerDifAvg} => powerBonus:${powerBonus} SOC=${batSoc}`;
 
-		const reportedBonus = (await getStateAsBoolean(this.adapter, XID_EEG_STATE_BONUS)) ?? false;
+		const reportedBonus = (await getStateAsBoolean(this.adapter, INTERNAL_STATE_EEG.BONUS)) ?? false;
 		if (powerBonus && !reportedBonus) {
 			console.log(msg + ' || STATE CHANGED');
 		} else {
@@ -51,10 +52,10 @@ export class AnalyzerBonus {
 
 		// update battery stand of charge
 		if (powerBonus) {
-			await this.adapter.setStateAsync(XID_EEG_STATE_SOC_LAST_BONUS, batSoc,true);
+			await this.adapter.setStateAsync(INTERNAL_STATE_EEG.SOC_LAST_BONUS, batSoc, true);
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(XID_EEG_STATE_BONUS, powerBonus,true);
+		await this.adapter.setStateAsync(INTERNAL_STATE_EEG.BONUS, powerBonus, true);
 	}
 }

@@ -4,7 +4,8 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerLack } from './analyzer-lack';
 import { AverageValueHandler } from './average-value-handler';
-import { XID_EEG_STATE_LOSS, XID_INGOING_BAT_SOC } from './dp-handler';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
+import { createMockedLandingZone } from './average-value-handler.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -33,16 +34,17 @@ describe('analyzer-lack', () => {
 				batSoc: number;
 			} = defaultProps,
 		) => {
+			await createMockedLandingZone(adapter);
 			const handler = await AverageValueHandler.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, handler);
 
-			adapter.setState(handler.powerDif.xidAvg5, props.powerDifAvg5);
-			adapter.setState(handler.powerGrid.xidAvg5, props.powerGridAvg5);
-			adapter.setState(XID_INGOING_BAT_SOC, props.batSoc);
+			adapter.setState(handler.powerDif.avg5.xid, props.powerDifAvg5);
+			adapter.setState(handler.powerGrid.avg5.xid, props.powerGridAvg5);
+			adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, props.batSoc);
 			return { handler, analyzer };
 		};
 
-		[XID_INGOING_BAT_SOC, XID_EEG_STATE_LOSS].forEach((testCase) => {
+		[EXTERNAL_STATE_LANDINGZONE.BAT_SOC, INTERNAL_STATE_EEG.LOSS].forEach((testCase) => {
 			it(`_ fetches ${testCase}`, async () => {
 				// arrange
 				const { analyzer } = await init();
@@ -94,8 +96,8 @@ describe('analyzer-lack', () => {
 					await analyzer.run();
 
 					// assert
-					expect(adapter.setStateAsync).to.be.calledWith(XID_EEG_STATE_LOSS, false);
-					asserts.assertStateHasValue(XID_EEG_STATE_LOSS, false);
+					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.LOSS, false);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.LOSS, false);
 				});
 			});
 		});
@@ -133,8 +135,8 @@ describe('analyzer-lack', () => {
 					await analyzer.run();
 
 					// assert
-					expect(adapter.setStateAsync).to.be.calledWith(XID_EEG_STATE_LOSS, true);
-					asserts.assertStateHasValue(XID_EEG_STATE_LOSS, true);
+					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.LOSS, true);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.LOSS, true);
 				});
 			});
 		});

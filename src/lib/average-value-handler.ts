@@ -1,17 +1,11 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValue } from './average-value';
-import {
-	XID_INGOING_BAT_LOAD,
-	XID_INGOING_GRID_LOAD,
-	XID_INGOING_IS_GRID_BUYING,
-	XID_INGOING_PV_GENERATION,
-	XID_INGOING_SOLAR_RADIATION,
-	XID_INGOING_TOTAL_LOAD,
-} from './dp-handler';
 import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
+import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
 
 export class AverageValueHandler {
-	private constructor(private adapter: AdapterInstance) {}
+	private constructor(private adapter: AdapterInstance) {
+	}
 
 	private _solar: AverageValue | undefined;
 
@@ -48,27 +42,27 @@ export class AverageValueHandler {
 
 		val._solar = await AverageValue.build(adapter, 'solar-radiation', {
 			desc: 'Average solar radiation',
-			xidSource: XID_INGOING_SOLAR_RADIATION,
+			xidSource: EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION,
 			unit: 'wm²',
 		});
 
 		val._powerPv = await AverageValue.build(adapter, 'power-pv', {
 			desc: 'PV generation',
-			xidSource: XID_INGOING_PV_GENERATION,
+			xidSource: EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
 			unit: 'kW',
 		});
 
 		val._batLoad = await AverageValue.build(adapter, 'bat-load', {
 			desc: 'The Battery load (-) consuming / (+) charging',
-			xidSource: XID_INGOING_BAT_LOAD,
+			xidSource: EXTERNAL_STATE_LANDINGZONE.BAT_LOAD,
 			unit: 'kW',
 		});
 
 		val._powerDif = await AverageValue.build(adapter, 'power-dif', {
 			desc: 'difference of energy over generation (+) and loss consumption(-)',
 			async mutation(_val: number) {
-				const load = await getStateAsNumber(adapter, XID_INGOING_TOTAL_LOAD);
-				const pvPower = await getStateAsNumber(adapter, XID_INGOING_PV_GENERATION);
+				const load = await getStateAsNumber(adapter, EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD);
+				const pvPower = await getStateAsNumber(adapter, EXTERNAL_STATE_LANDINGZONE.PV_GENERATION);
 
 				if (!load || !pvPower) {
 					return Number.NEGATIVE_INFINITY;
@@ -84,9 +78,9 @@ export class AverageValueHandler {
 
 		val._powerGrid = await AverageValue.build(adapter, 'power-grid', {
 			desc: 'amount of generation(+) or buying(-) of energy',
-			xidSource: XID_INGOING_GRID_LOAD,
+			xidSource: EXTERNAL_STATE_LANDINGZONE.GRID_LOAD,
 			async mutation(val: number) {
-				const isGridBuying = (await getStateAsBoolean(adapter, XID_INGOING_IS_GRID_BUYING)) ?? true;
+				const isGridBuying = (await getStateAsBoolean(adapter, EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING)) ?? true;
 				return round(val * (isGridBuying ? -1 : 1));
 			},
 		});
@@ -106,16 +100,16 @@ export class AverageValueHandler {
 	private async calculateItem(item: AverageValue): Promise<void> {
 		let sourceVal = 0;
 
-		if (item.xidSource) {
-			sourceVal = (await getStateAsNumber(this.adapter, item.xidSource)) ?? 0;
+		if (item.source) {
+			sourceVal = (await item.source?.getValue()) ?? 0;
 		}
 
 		if (item.mutation) {
 			sourceVal = await item.mutation(sourceVal);
 		}
 
-		console.debug(`Updating Current Value (${sourceVal}) with xid: ${item.xidCurrent}`);
-		await this.adapter.setStateAsync(item.xidCurrent, sourceVal, true);
+		console.debug(`Updating Current Value (${sourceVal}) with xid: ${item.current.xid}`);
+		await this.adapter.setStateAsync(item.current.xid, sourceVal, true);
 
 		try {
 			const end = Date.now();
@@ -123,7 +117,7 @@ export class AverageValueHandler {
 			const start5Min = end - 60 * 1000 * 5;
 
 			this.adapter.sendTo('history.0', 'getHistory', {
-				id: `${this.adapter.name}.${this.adapter.instance}.${item.xidCurrent}`,
+				id: `${this.adapter.name}.${this.adapter.instance}.${item.current.xid}`,
 				options: {
 					start: start10Min,
 					end: end,
@@ -131,7 +125,7 @@ export class AverageValueHandler {
 				},
 			});
 			const result = await this.adapter.sendToAsync('history.0', 'getHistory', {
-				id: `${this.adapter.name}.${this.adapter.instance}.${item.xidCurrent}`,
+				id: `${this.adapter.name}.${this.adapter.instance}.${item.current.xid}`,
 				options: {
 					start: start10Min,
 					end: end,
@@ -141,10 +135,10 @@ export class AverageValueHandler {
 
 			const values = (result as unknown as any).result as { val: number; ts: number }[];
 
-			await this.calculateAvgValue(values, item.xidAvg);
-			await this.calculateAvgValue(values, item.xidAvg5, start5Min);
+			await this.calculateAvgValue(values, item.avg.xid);
+			await this.calculateAvgValue(values, item.avg5.xid, start5Min);
 		} catch (error) {
-			console.error(`calculateAvgValue(${item.getCurrent}) # ${error}`);
+			console.error(`calculateAvgValue(${await item.current.getValue()}) # ${error}`);
 		}
 	}
 
