@@ -7,8 +7,8 @@
 import * as utils from '@iobroker/adapter-core';
 
 import { scheduleJob } from 'node-schedule';
-import { AnalyzerLack } from './lib/analyzer-lack';
-import { AnalyzerBonus } from './lib/analyzer-bonus';
+import { AnalyzerLack } from './lib/services/analyzer-lack';
+import { AnalyzerBonus } from './lib/services/analyzer-bonus';
 import { AverageValueGroup } from './lib/values/average-value-group';
 import {
 	addSubscriptions,
