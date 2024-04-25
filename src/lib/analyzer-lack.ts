@@ -1,6 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValueGroup } from './average-value-group';
-import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
+import { AverageValueGroup } from './values/average-value-group';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './handler/dp-handler';
 
 export class AnalyzerLack {
 	// TODO move to config

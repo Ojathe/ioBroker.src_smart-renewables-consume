@@ -9,8 +9,13 @@ import * as utils from '@iobroker/adapter-core';
 import { scheduleJob } from 'node-schedule';
 import { AnalyzerLack } from './lib/analyzer-lack';
 import { AnalyzerBonus } from './lib/analyzer-bonus';
-import { AverageValueGroup } from './lib/average-value-group';
-import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './lib/dp-handler';
+import { AverageValueGroup } from './lib/values/average-value-group';
+import {
+	addSubscriptions,
+	createObjects,
+	EXTERNAL_STATE_LANDINGZONE,
+	INTERNAL_STATE_EEG,
+} from './lib/handler/dp-handler';
 import { setStateAsBoolean } from './util/state-util';
 
 // Load your modules here, e.g.:

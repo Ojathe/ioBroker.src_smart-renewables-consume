@@ -4,8 +4,8 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AverageValue } from './average-value';
 import { AverageValueGroup } from './average-value-group';
-import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
-import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
+import { EXTERNAL_STATE_LANDINGZONE } from '../handler/dp-handler';
+import { createObjectBool, createObjectNum } from '../../util/create-objects-helper';
 
 const { adapter, database } = utils.unit.createMocks({});
 

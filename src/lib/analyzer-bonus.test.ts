@@ -3,9 +3,9 @@ import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
-import { AverageValueGroup } from './average-value-group';
-import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
-import { createMockedLandingZone } from './average-value-group.test';
+import { AverageValueGroup } from './values/average-value-group';
+import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './handler/dp-handler';
+import { createMockedLandingZone } from './values/average-value-group.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
