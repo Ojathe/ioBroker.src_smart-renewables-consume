@@ -11,7 +11,7 @@ import { AnalyzerLack } from './lib/analyzer-lack';
 import { AnalyzerBonus } from './lib/analyzer-bonus';
 import { AverageValueGroup } from './lib/average-value-group';
 import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './lib/dp-handler';
-import { setStateAsBoolean } from './lib/util/state-util';
+import { setStateAsBoolean } from './util/state-util';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";

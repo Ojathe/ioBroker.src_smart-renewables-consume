@@ -1,7 +1,7 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
-import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
+import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 
 export class AnalyzerBonus {
 	// TODO move to config

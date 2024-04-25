@@ -1,6 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValue } from './average-value';
-import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
+import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
 import { round } from '../util/math';
 
