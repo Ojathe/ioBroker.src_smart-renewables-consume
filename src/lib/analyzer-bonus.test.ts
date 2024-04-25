@@ -3,9 +3,9 @@ import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
-import { AverageValueHandler } from './average-value-handler';
+import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
-import { createMockedLandingZone } from './average-value-handler.test';
+import { createMockedLandingZone } from './average-value-group.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -30,7 +30,7 @@ describe('analyzer-bonus', () => {
 			props: { powerDifCurrent: number; powerDifAvg: number; powerGridAvg: number } = defaultProps,
 		) => {
 			await createMockedLandingZone(adapter);
-			const handler = await AverageValueHandler.build(adapter as unknown as AdapterInstance);
+			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, handler);
 
 			adapter.setState(handler.powerDif.current.xid, props.powerDifCurrent);

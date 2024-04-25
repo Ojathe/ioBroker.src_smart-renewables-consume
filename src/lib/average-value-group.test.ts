@@ -3,7 +3,7 @@ import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AverageValue } from './average-value';
-import { AverageValueHandler, calculateAverageValue } from './average-value-handler';
+import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
 import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
 
@@ -19,7 +19,7 @@ export async function createMockedLandingZone(adapter: MockAdapter) {
 	await createObjectBool(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, false);
 }
 
-describe('AverageValueHandler', () => {
+describe('AverageValueGroup', () => {
 	const currentTestCaseSolutions: Array<CurrentTestSolution<any>> = [
 		createCurrentTestCase({
 			function: 'powerDif',
@@ -116,7 +116,7 @@ describe('AverageValueHandler', () => {
 
 	const initHandler = async () => {
 		await createMockedLandingZone(adapter);
-		return await AverageValueHandler.build(adapter as unknown as AdapterInstance);
+		return await AverageValueGroup.build(adapter as unknown as AdapterInstance);
 	};
 
 	const stateMap: Map<AggregatFunction, [string, object | undefined]> = new Map([
@@ -176,19 +176,6 @@ describe('AverageValueHandler', () => {
 			});
 
 			describe('calculate()', () => {
-				it(`History is accessed`, async () => {
-					//Arrange
-					const handler = await initHandler();
-
-					//Act
-					await handler.calculate();
-
-					//Assert
-					expect(adapter.sendTo).to.be.calledWithMatch('history.0', 'getHistory', {
-						id: `${adapter.name}.${adapter.instance}.${handler[testSolution.function].current.xid}`,
-					});
-				});
-
 				for (const currentCase of testSolution.testCases) {
 					const stateDescription = currentCase.states.map((state) => `${state.xid}=${state.value}`).join(', ');
 					it(`Statesituation '${stateDescription}' udaptes 'current' to ${currentCase.expectation}`, async () => {
@@ -200,63 +187,12 @@ describe('AverageValueHandler', () => {
 						expect(await handler[testSolution.function].current.getValue()).to.eq(currentCase.expectation);
 					});
 				}
-
-				const mockedHistory = [
-					{ ts: Date.now(), val: 20 },
-					{ ts: Date.now() - 4 * 1000 * 60, val: 10 },
-					{ ts: Date.now() - 8 * 1000 * 60, val: 5 },
-				];
-
-				it(`updates all 3 values (current, 5min & 10min)`, async () => {
-					//Arrange
-					const handler = await initHandler();
-					const avgVal = handler[testSolution.function];
-					adapter.sendToAsync.resolves({ result: mockedHistory });
-
-					//Act
-					await handler.calculate();
-
-					//Assert
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.current.xid, { val: 0, ack: true });
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.avg.xid, {
-						val: Math.round(((20 + 10 + 5) / 3) * 100) / 100,
-						ack: true,
-					});
-					expect(adapter.setStateAsync).to.be.calledWith(avgVal.avg5.xid, {
-						val: Math.round(((20 + 10) / 2) * 100) / 100,
-						ack: true,
-					});
-				});
 			});
 		});
 	}
-
-	describe('calculateAverageValue()', () => {
-		it('should return 0 for empty list', () => {
-			const result = calculateAverageValue([]);
-
-			expect(result).not.to.be.undefined;
-			expect(result.sum).to.eq(0);
-			expect(result.count).to.eq(0);
-			expect(result.avg).to.eq(0);
-		});
-
-		it('should calculate correctly', () => {
-			const result = calculateAverageValue([
-				{ ts: 1234, val: 2 },
-				{ ts: 12345, val: 4 },
-				{ ts: 12345, val: 6 },
-			]);
-
-			expect(result).not.to.be.undefined;
-			expect(result.sum).to.eq(12);
-			expect(result.count).to.eq(3);
-			expect(result.avg).to.eq(4);
-		});
-	});
 });
 
-type AggregatFunction = keyof AverageValueHandler & ('powerDif' | 'powerGrid' | 'powerPv' | 'solar' | 'batLoad');
+type AggregatFunction = keyof AverageValueGroup & ('powerDif' | 'powerGrid' | 'powerPv' | 'solar' | 'batLoad');
 
 type CurrentTestSolutionTemplate<T> = {
 	function: AggregatFunction;

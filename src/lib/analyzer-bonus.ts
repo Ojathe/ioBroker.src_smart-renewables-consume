@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValueHandler } from './average-value-handler';
+import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
 import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
 
@@ -9,7 +9,7 @@ export class AnalyzerBonus {
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
 
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {
+	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueGroup) {
 	}
 
 	public async run(): Promise<void> {

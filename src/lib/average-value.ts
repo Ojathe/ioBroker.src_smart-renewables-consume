@@ -1,5 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { XidNumber } from './values/xid';
+import { calculateAverageValue } from '../util/math';
 
 // TODO instance number and other values configurable
 const customInflux = {
@@ -103,4 +104,61 @@ export class AverageValue {
 		return new AverageValue(adapter, propertyName, iobrokerObjects, { desc, unit, mutation, source });
 	}
 
+	public async calculate(): Promise<void> {
+		let sourceVal = 0;
+
+		if (this.source) {
+			sourceVal = (await this.source?.getValue()) ?? 0;
+		}
+
+		if (this.mutation) {
+			sourceVal = await this.mutation(sourceVal);
+		}
+
+		console.debug(`Updating Current Value (${sourceVal}) with xid: ${this.current.xid}`);
+		await this.adapter.setStateAsync(this.current.xid, sourceVal, true);
+
+		try {
+			const end = Date.now();
+			const start10Min = end - 60 * 1000 * 10;
+			const start5Min = end - 60 * 1000 * 5;
+
+			this.adapter.sendTo('history.0', 'getHistory', {
+				id: `${this.adapter.name}.${this.adapter.instance}.${this.current.xid}`,
+				options: {
+					start: start10Min,
+					end: end,
+					aggregate: 'none',
+				},
+			});
+
+			const result = await this.adapter.sendToAsync('history.0', 'getHistory', {
+				id: `${this.adapter.name}.${this.adapter.instance}.${this.current.xid}`,
+				options: {
+					start: start10Min,
+					end: end,
+					aggregate: 'none',
+				},
+			});
+
+			const values = (result as unknown as any).result as { val: number; ts: number }[];
+
+			await this.calculateAvgValue(values, this.avg.xid);
+			await this.calculateAvgValue(values, this.avg5.xid, start5Min);
+		} catch (error) {
+			console.error(`calculateAvgValue(${await this.current.getValue()}) # ${error}`);
+		}
+	}
+
+	private async calculateAvgValue(
+		values: { val: number; ts: number }[],
+		xidTarget: string,
+		startInMs = 0,
+	): Promise<void> {
+		values = values.filter((item) => item.ts >= startInMs);
+
+		const { sum, count, avg } = calculateAverageValue(values);
+		console.debug(`Updating Average Value ( ${avg} ) (sum: ${sum}, count: ${count}) with xid: ` + xidTarget);
+		await this.adapter.setStateAsync(xidTarget, { val: avg, ack: true });
+	}
 }

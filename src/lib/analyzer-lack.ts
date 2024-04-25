@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValueHandler } from './average-value-handler';
+import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
 
 export class AnalyzerLack {
@@ -7,7 +7,7 @@ export class AnalyzerLack {
 	public static readonly lackReportingThreshold = -0.5;
 	public static readonly gridBuyingThreshold = -0.2;
 
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueHandler) {
+	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueGroup) {
 	}
 
 	public async run(): Promise<void> {

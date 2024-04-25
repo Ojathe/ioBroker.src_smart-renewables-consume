@@ -13,10 +13,14 @@ describe('AverageValue', () => {
 		// We want to start each test with a fresh database
 		database.clear();
 	});
+	const mockedSource = 'sourceUnderTest';
+	const mockedName = 'AverageValueUnderTest';
 
+	const setup = async (adapter: MockAdapter) => {
+		await createObjectNum(adapter as unknown as AdapterInstance, mockedSource, 0);
+
+	};
 	describe('build() ', () => {
-		const mockedSource = 'sourceUnderTest';
-		const mockedName = 'AverageValueUnderTest';
 		const mockedDesc = 'descUnderTest';
 		const mockedUnit = 'unitUnderTest';
 
@@ -24,9 +28,6 @@ describe('AverageValue', () => {
 		const mockedAvg = 'avg.AverageValueUnderTest.last-10-min';
 		const mockedAvg5 = 'avg.AverageValueUnderTest.last-5-min';
 
-		const setup = async (adapter: MockAdapter) => {
-			await createObjectNum(adapter as unknown as AdapterInstance, mockedSource, 0);
-		};
 
 		it('should initialize correctly', async () => {
 			const asserts = utils.unit.createAsserts(database, adapter);
@@ -78,6 +79,56 @@ describe('AverageValue', () => {
 			// assert
 			asserts.assertStateHasValue(avgValToTest.current.xid, 2);
 			expect(await avgValToTest.current.getValue()).to.eq(2);
+		});
+	});
+
+	describe('calculate()', () => {
+		it(`History is accessed`, async () => {
+			//Arrange
+			await setup(adapter);
+
+			const avgValToTest = await AverageValue.build(adapter as unknown as AdapterInstance, mockedName, {
+				xidSource: mockedSource,
+			});
+
+			//Act
+			await avgValToTest.calculate();
+
+			//Assert
+			expect(adapter.sendTo).to.be.calledWithMatch('history.0', 'getHistory', {
+				id: `${adapter.name}.${adapter.instance}.${avgValToTest.current.xid}`,
+			});
+		});
+
+		const mockedHistory = [
+			{ ts: Date.now(), val: 20 },
+			{ ts: Date.now() - 4 * 1000 * 60, val: 10 },
+			{ ts: Date.now() - 8 * 1000 * 60, val: 5 },
+		];
+
+		it(`updates all 3 values (current, 5min & 10min)`, async () => {
+			//Arrange
+			await setup(adapter);
+
+			const avgValToTest = await AverageValue.build(adapter as unknown as AdapterInstance, mockedName, {
+				xidSource: mockedSource,
+			});
+
+			adapter.sendToAsync.resolves({ result: mockedHistory });
+
+			//Act
+			await avgValToTest.calculate();
+
+			//Assert
+			expect(adapter.setStateAsync).to.be.calledWith(avgValToTest.current.xid, { val: 0, ack: true });
+			expect(adapter.setStateAsync).to.be.calledWith(avgValToTest.avg.xid, {
+				val: Math.round(((20 + 10 + 5) / 3) * 100) / 100,
+				ack: true,
+			});
+			expect(adapter.setStateAsync).to.be.calledWith(avgValToTest.avg5.xid, {
+				val: Math.round(((20 + 10) / 2) * 100) / 100,
+				ack: true,
+			});
 		});
 	});
 });

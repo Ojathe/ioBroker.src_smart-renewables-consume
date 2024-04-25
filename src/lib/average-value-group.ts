@@ -2,8 +2,9 @@ import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValue } from './average-value';
 import { getStateAsBoolean, getStateAsNumber } from './util/state-util';
 import { EXTERNAL_STATE_LANDINGZONE } from './dp-handler';
+import { round } from '../util/math';
 
-export class AverageValueHandler {
+export class AverageValueGroup {
 	private constructor(private adapter: AdapterInstance) {
 	}
 
@@ -37,8 +38,8 @@ export class AverageValueHandler {
 		return this._batLoad!;
 	}
 
-	static async build(adapter: AdapterInstance): Promise<AverageValueHandler> {
-		const val = new AverageValueHandler(adapter);
+	static async build(adapter: AdapterInstance): Promise<AverageValueGroup> {
+		const val = new AverageValueGroup(adapter);
 
 		val._solar = await AverageValue.build(adapter, 'solar-radiation', {
 			desc: 'Average solar radiation',
@@ -91,82 +92,12 @@ export class AverageValueHandler {
 	}
 
 	public async calculate(): Promise<void> {
-		await this.calculateItem(this.powerDif);
-		await this.calculateItem(this.powerGrid);
-		await this.calculateItem(this.powerPv);
-		await this.calculateItem(this.solar);
+		await this.powerDif.calculate();
+		await this.powerGrid.calculate();
+		await this.powerPv.calculate();
+		await this.solar.calculate();
 	}
 
-	private async calculateItem(item: AverageValue): Promise<void> {
-		let sourceVal = 0;
-
-		if (item.source) {
-			sourceVal = (await item.source?.getValue()) ?? 0;
-		}
-
-		if (item.mutation) {
-			sourceVal = await item.mutation(sourceVal);
-		}
-
-		console.debug(`Updating Current Value (${sourceVal}) with xid: ${item.current.xid}`);
-		await this.adapter.setStateAsync(item.current.xid, sourceVal, true);
-
-		try {
-			const end = Date.now();
-			const start10Min = end - 60 * 1000 * 10;
-			const start5Min = end - 60 * 1000 * 5;
-
-			this.adapter.sendTo('history.0', 'getHistory', {
-				id: `${this.adapter.name}.${this.adapter.instance}.${item.current.xid}`,
-				options: {
-					start: start10Min,
-					end: end,
-					aggregate: 'none',
-				},
-			});
-			const result = await this.adapter.sendToAsync('history.0', 'getHistory', {
-				id: `${this.adapter.name}.${this.adapter.instance}.${item.current.xid}`,
-				options: {
-					start: start10Min,
-					end: end,
-					aggregate: 'none',
-				},
-			});
-
-			const values = (result as unknown as any).result as { val: number; ts: number }[];
-
-			await this.calculateAvgValue(values, item.avg.xid);
-			await this.calculateAvgValue(values, item.avg5.xid, start5Min);
-		} catch (error) {
-			console.error(`calculateAvgValue(${await item.current.getValue()}) # ${error}`);
-		}
-	}
-
-	private async calculateAvgValue(
-		values: { val: number; ts: number }[],
-		xidTarget: string,
-		startInMs = 0,
-	): Promise<void> {
-		values = values.filter((item) => item.ts >= startInMs);
-
-		const { sum, count, avg } = calculateAverageValue(values);
-		console.debug(`Updating Average Value ( ${avg} ) (sum: ${sum}, count: ${count}) with xid: ` + xidTarget);
-		await this.adapter.setStateAsync(xidTarget, { val: avg, ack: true });
-	}
 }
 
-export function calculateAverageValue(values: { val: number; ts: number }[]): {
-	sum: number;
-	count: number;
-	avg: number;
-} {
-	const sum = round(values.map((item) => item.val).reduce((prev, curr) => prev + curr, 0));
-	const count = values.length != 0 ? values.length : 0;
-	const avg = round(sum / (count > 0 ? count : 1));
 
-	return { sum, count, avg };
-}
-
-function round(val: number): number {
-	return Math.round(val * 100) / 100;
-}

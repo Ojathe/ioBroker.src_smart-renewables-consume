@@ -9,7 +9,7 @@ import * as utils from '@iobroker/adapter-core';
 import { scheduleJob } from 'node-schedule';
 import { AnalyzerLack } from './lib/analyzer-lack';
 import { AnalyzerBonus } from './lib/analyzer-bonus';
-import { AverageValueHandler } from './lib/average-value-handler';
+import { AverageValueGroup } from './lib/average-value-group';
 import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './lib/dp-handler';
 import { setStateAsBoolean } from './lib/util/state-util';
 
@@ -17,7 +17,7 @@ import { setStateAsBoolean } from './lib/util/state-util';
 // import * as fs from "fs";
 
 class SrcSmartRenewablesConsume extends utils.Adapter {
-	private avgValueHandler: AverageValueHandler | undefined;
+	private avgValueHandler: AverageValueGroup | undefined;
 	private analyzerBonus: AnalyzerBonus | undefined;
 	private analyzerLack: AnalyzerLack | undefined;
 
@@ -65,7 +65,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			await this.updateIngoingValue(externalId);
 		}
 
-		this.avgValueHandler = await AverageValueHandler.build(this);
+		this.avgValueHandler = await AverageValueGroup.build(this);
 		this.analyzerBonus = new AnalyzerBonus(this, this.avgValueHandler);
 		this.analyzerLack = new AnalyzerLack(this, this.avgValueHandler);
 

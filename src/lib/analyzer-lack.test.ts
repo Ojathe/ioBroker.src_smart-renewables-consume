@@ -3,9 +3,9 @@ import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerLack } from './analyzer-lack';
-import { AverageValueHandler } from './average-value-handler';
+import { AverageValueGroup } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
-import { createMockedLandingZone } from './average-value-handler.test';
+import { createMockedLandingZone } from './average-value-group.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -35,7 +35,7 @@ describe('analyzer-lack', () => {
 			} = defaultProps,
 		) => {
 			await createMockedLandingZone(adapter);
-			const handler = await AverageValueHandler.build(adapter as unknown as AdapterInstance);
+			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, handler);
 
 			adapter.setState(handler.powerDif.avg5.xid, props.powerDifAvg5);
