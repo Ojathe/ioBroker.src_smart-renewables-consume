@@ -1,6 +1,6 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { XidNumber } from './xid';
-import { calculateAverageValue } from '../../util/math';
+import { calculateAverageValue } from '../util/math';
 
 // TODO instance number and other values configurable
 const customInflux = {

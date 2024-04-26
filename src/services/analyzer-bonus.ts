@@ -1,7 +1,11 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValueGroup } from '../values/average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
-import { getStateAsBoolean, getStateAsNumber } from '../../util/state-util';
+import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
+
+export interface AnalyzerBonusProps {
+
+}
 
 export class AnalyzerBonus {
 	// TODO move to config
@@ -21,7 +25,6 @@ export class AnalyzerBonus {
 		// Energy, missing (<0) oder additionally (>0) related to the household load
 		const powerDif = await this.avgValueHandler.powerDif.current.getValue();
 		const powerDifAvg = await this.avgValueHandler.powerDif.avg.getValue();
-
 		const gridPowerAvg = await this.avgValueHandler.powerGrid.avg.getValue();
 
 		const batSoc = (await getStateAsNumber(this.adapter, EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) ?? 0;

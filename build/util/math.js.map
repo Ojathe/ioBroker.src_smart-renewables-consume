@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/util/math.ts"],
+  "sourcesContent": ["export function calculateAverageValue(values: { val: number; ts: number }[]): {\n\tsum: number;\n\tcount: number;\n\tavg: number;\n} {\n\tconst sum = round(values.map((item) => item.val).reduce((prev, curr) => prev + curr, 0));\n\tconst count = values.length != 0 ? values.length : 0;\n\tconst avg = round(sum / (count > 0 ? count : 1));\n\n\treturn { sum, count, avg };\n}\n\n\nexport function round(val: number): number {\n\treturn Math.round(val * 100) / 100;\n}"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,SAAS,sBAAsB,QAIpC;AACD,QAAM,MAAM,MAAM,OAAO,IAAI,CAAC,SAAS,KAAK,GAAG,EAAE,OAAO,CAAC,MAAM,SAAS,OAAO,MAAM,CAAC,CAAC;AACvF,QAAM,QAAQ,OAAO,UAAU,IAAI,OAAO,SAAS;AACnD,QAAM,MAAM,MAAM,OAAO,QAAQ,IAAI,QAAQ,EAAE;AAE/C,SAAO,EAAE,KAAK,OAAO,IAAI;AAC1B;AAGO,SAAS,MAAM,KAAqB;AAC1C,SAAO,KAAK,MAAM,MAAM,GAAG,IAAI;AAChC;",
+  "names": []
+}

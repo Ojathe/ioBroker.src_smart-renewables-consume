@@ -23,11 +23,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var utils = __toESM(require("@iobroker/adapter-core"));
 var import_node_schedule = require("node-schedule");
-var import_analyzer_lack = require("./lib/analyzer-lack");
-var import_analyzer_bonus = require("./lib/analyzer-bonus");
-var import_average_value_handler = require("./lib/average-value-handler");
-var import_dp_handler = require("./lib/dp-handler");
-var import_state_util = require("./lib/util/state-util");
+var import_analyzer_lack = require("./services/analyzer-lack");
+var import_analyzer_bonus = require("./services/analyzer-bonus");
+var import_average_value_group = require("./values/average-value-group");
+var import_dp_handler = require("./handler/dp-handler");
+var import_state_util = require("./util/state-util");
 class SrcSmartRenewablesConsume extends utils.Adapter {
   avgValueHandler;
   analyzerBonus;
@@ -42,13 +42,13 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
   /**
-      * Is called when databases are connected and adapter received configuration.
-      */
+   * Is called when databases are connected and adapter received configuration.
+   */
   async onReady() {
     this.log.debug("config " + this.config);
     await (0, import_dp_handler.createObjects)(this);
     (0, import_dp_handler.addSubscriptions)(this, this.config);
-    await (0, import_state_util.setStateAsBoolean)(this, import_dp_handler.XID_EEG_STATE_OPERATION, this.config.optionEnergyManagementActive);
+    await (0, import_state_util.setStateAsBoolean)(this, import_dp_handler.INTERNAL_STATE_EEG.OPERATION, this.config.optionEnergyManagementActive);
     const configToMap = [
       this.config.optionSourcePvGeneration,
       this.config.optionSourceBatterySoc,
@@ -62,7 +62,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
       console.debug("initializing: " + externalId);
       await this.updateIngoingValue(externalId);
     }
-    this.avgValueHandler = await import_average_value_handler.AverageValueHandler.build(this);
+    this.avgValueHandler = await import_average_value_group.AverageValueGroup.build(this);
     this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this, this.avgValueHandler);
     this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this, this.avgValueHandler);
     (0, import_node_schedule.scheduleJob)("*/20 * * * * *", () => {
@@ -129,8 +129,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
   // 	// this.log.info('check group user admin group admin: ' + result);
   // }
   /**
-      * Is called when adapter shuts down - callback has to be called under any circumstances!
-      */
+   * Is called when adapter shuts down - callback has to be called under any circumstances!
+   */
   onUnload(callback) {
     try {
       callback();
@@ -168,8 +168,8 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
   // 	}
   // }
   /**
-      * Is called if a subscribed state changes
-      */
+   * Is called if a subscribed state changes
+   */
   onStateChange(id, state) {
     if (state) {
       this.updateIngoingStateWithValue(id, state.val);
@@ -193,25 +193,25 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
     let xidtoUpdate;
     switch (externalId) {
       case this.config.optionSourcePvGeneration:
-        xidtoUpdate = import_dp_handler.XID_INGOING_PV_GENERATION;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
         break;
       case this.config.optionSourceBatterySoc:
-        xidtoUpdate = import_dp_handler.XID_INGOING_BAT_SOC;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
         break;
       case this.config.optionSourceIsGridBuying:
-        xidtoUpdate = import_dp_handler.XID_INGOING_IS_GRID_BUYING;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
         break;
       case this.config.optionSourceIsGridLoad:
-        xidtoUpdate = import_dp_handler.XID_INGOING_GRID_LOAD;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
         break;
       case this.config.optionSourceSolarRadiation:
-        xidtoUpdate = import_dp_handler.XID_INGOING_SOLAR_RADIATION;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
         break;
       case this.config.optionSourceTotalLoad:
-        xidtoUpdate = import_dp_handler.XID_INGOING_TOTAL_LOAD;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
         break;
       case this.config.optionSourceBatteryLoad:
-        xidtoUpdate = import_dp_handler.XID_INGOING_BAT_LOAD;
+        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
         break;
     }
     return xidtoUpdate;

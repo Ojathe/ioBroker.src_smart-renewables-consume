@@ -21,8 +21,8 @@ __export(analyzer_bonus_exports, {
   AnalyzerBonus: () => AnalyzerBonus
 });
 module.exports = __toCommonJS(analyzer_bonus_exports);
-var import_dp_handler = require("./dp-handler");
-var import_state_util = require("./util/state-util");
+var import_dp_handler = require("../handler/dp-handler");
+var import_state_util = require("../util/state-util");
 class AnalyzerBonus {
   constructor(adapter, avgValueHandler) {
     this.adapter = adapter;
@@ -35,10 +35,10 @@ class AnalyzerBonus {
   async run() {
     var _a, _b;
     let powerBonus = false;
-    const powerDif = await this.avgValueHandler.powerDif.getCurrent();
-    const powerDifAvg = await this.avgValueHandler.powerDif.get10Min();
-    const gridPowerAvg = await this.avgValueHandler.powerGrid.get10Min();
-    const batSoc = (_a = await (0, import_state_util.getStateAsNumber)(this.adapter, import_dp_handler.XID_INGOING_BAT_SOC)) != null ? _a : 0;
+    const powerDif = await this.avgValueHandler.powerDif.current.getValue();
+    const powerDifAvg = await this.avgValueHandler.powerDif.avg.getValue();
+    const gridPowerAvg = await this.avgValueHandler.powerGrid.avg.getValue();
+    const batSoc = (_a = await (0, import_state_util.getStateAsNumber)(this.adapter, import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) != null ? _a : 0;
     if (gridPowerAvg > AnalyzerBonus.sellingThreshold) {
       powerBonus = true;
     }
@@ -49,16 +49,16 @@ class AnalyzerBonus {
       powerBonus = false;
     }
     const msg = `BonusAnalysis # Bonus PowerDif=${powerDif} PowerDifAvg=${powerDifAvg} => powerBonus:${powerBonus} SOC=${batSoc}`;
-    const reportedBonus = (_b = await (0, import_state_util.getStateAsBoolean)(this.adapter, import_dp_handler.XID_EEG_STATE_BONUS)) != null ? _b : false;
+    const reportedBonus = (_b = await (0, import_state_util.getStateAsBoolean)(this.adapter, import_dp_handler.INTERNAL_STATE_EEG.BONUS)) != null ? _b : false;
     if (powerBonus && !reportedBonus) {
       console.log(msg + " || STATE CHANGED");
     } else {
       console.debug(msg);
     }
     if (powerBonus) {
-      await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_SOC_LAST_BONUS, batSoc, true);
+      await this.adapter.setStateAsync(import_dp_handler.INTERNAL_STATE_EEG.SOC_LAST_BONUS, batSoc, true);
     }
-    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_BONUS, powerBonus, true);
+    await this.adapter.setStateAsync(import_dp_handler.INTERNAL_STATE_EEG.BONUS, powerBonus, true);
   }
 }
 // Annotate the CommonJS export names for ESM import in node:

@@ -21,7 +21,7 @@ __export(analyzer_lack_exports, {
   AnalyzerLack: () => AnalyzerLack
 });
 module.exports = __toCommonJS(analyzer_lack_exports);
-var import_dp_handler = require("./dp-handler");
+var import_dp_handler = require("../handler/dp-handler");
 class AnalyzerLack {
   constructor(adapter, avgValueHandler) {
     this.adapter = adapter;
@@ -33,9 +33,9 @@ class AnalyzerLack {
   async run() {
     var _a, _b, _c, _d;
     let powerLack = false;
-    const powerDifAvg5 = await this.avgValueHandler.powerDif.get5Min();
-    const gridPowerAvg5 = await this.avgValueHandler.powerGrid.get5Min();
-    const batSoc = (_b = (_a = await this.adapter.getStateAsync(import_dp_handler.XID_INGOING_BAT_SOC)) == null ? void 0 : _a.val) != null ? _b : 0;
+    const powerDifAvg5 = await this.avgValueHandler.powerDif.avg5.getValue();
+    const gridPowerAvg5 = await this.avgValueHandler.powerGrid.avg5.getValue();
+    const batSoc = (_b = (_a = await this.adapter.getStateAsync(import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) == null ? void 0 : _a.val) != null ? _b : 0;
     if (powerDifAvg5 < -1.9 && batSoc < 95) {
       powerLack = true;
     }
@@ -52,13 +52,13 @@ class AnalyzerLack {
       powerLack = true;
     }
     const msg = `LackAnalysis # Lack GridPowerAvg5=${gridPowerAvg5} => PowerLack:${powerLack} SOC=${batSoc}`;
-    const reportedLack = (_d = (_c = await this.adapter.getStateAsync(import_dp_handler.XID_EEG_STATE_LOSS)) == null ? void 0 : _c.val) != null ? _d : false;
+    const reportedLack = (_d = (_c = await this.adapter.getStateAsync(import_dp_handler.INTERNAL_STATE_EEG.LOSS)) == null ? void 0 : _c.val) != null ? _d : false;
     if (powerLack && !reportedLack) {
       console.log(msg + " || STATE CHANGED");
     } else {
       console.debug(msg);
     }
-    await this.adapter.setStateAsync(import_dp_handler.XID_EEG_STATE_LOSS, powerLack, true);
+    await this.adapter.setStateAsync(import_dp_handler.INTERNAL_STATE_EEG.LOSS, powerLack, true);
   }
 }
 // Annotate the CommonJS export names for ESM import in node:

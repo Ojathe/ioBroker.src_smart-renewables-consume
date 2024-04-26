@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { createObjectBool, createObjectNum } from '../../util/create-objects-helper';
+import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
 
 export const EXTERNAL_STATE_LANDINGZONE = {
 	PV_GENERATION: 'ingoing.pv-generation',

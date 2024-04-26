@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { createObject } from '../../util/create-objects-helper';
+import { createObject } from '../util/create-objects-helper';
 
 export interface CreateXIdProps {
 	access?: { read: boolean, write: boolean },

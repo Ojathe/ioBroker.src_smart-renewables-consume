@@ -2,7 +2,7 @@ import { AdapterInstance } from '@iobroker/adapter-core';
 import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import { AverageValue } from './average-value';
-import { createObjectNum } from '../../util/create-objects-helper';
+import { createObjectNum } from '../util/create-objects-helper';
 
 const { adapter, database } = utils.unit.createMocks({});
 

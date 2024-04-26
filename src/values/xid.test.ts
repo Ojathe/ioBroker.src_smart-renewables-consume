@@ -2,7 +2,7 @@ import { AdapterInstance } from '@iobroker/adapter-core';
 import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import { CreateXIdProps, XidNumber, XidString } from './xid';
-import { createObject, createObjectNum } from '../../util/create-objects-helper';
+import { createObject, createObjectNum } from '../util/create-objects-helper';
 
 const { adapter, database } = utils.unit.createMocks({});
 
