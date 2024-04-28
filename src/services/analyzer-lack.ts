@@ -1,13 +1,14 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { PowerRepository } from '../repositories/power-repository';
-import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
+import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
+import { LandingZoneRepository } from '../repositories/landing-zone-repository';
 
 export class AnalyzerLack {
 	// TODO move to config
 	public static readonly lackReportingThreshold = -0.5;
 	public static readonly gridBuyingThreshold = -0.2;
 
-	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository) {
+	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository) {
 	}
 
 	public async run(): Promise<void> {
@@ -22,35 +23,35 @@ export class AnalyzerLack {
 		// Energy, missing (<0) oder additionally (>0) related to the household load
 		const powerDifAvg5 = await this.powerRepo.avg5.powerBalance();
 		const gridPowerAvg5 = await this.powerRepo.avg5.powerGrid();
-		const batSoc = ((await this.adapter.getStateAsync(EXTERNAL_STATE_LANDINGZONE.BAT_SOC))?.val as number) ?? 0;
+		const batSoC = await this.landingZoneRepo.batterySoC.getValue();
 
 		// TODO PV Connection
 		// Mangel, wenn
 		//	-> mindestens 2kW vom Stromnetz/AKku bezogen werden,
 		//	-> der Akku weniger als 95% hat
 		//	-> kaum bis keine Solarstrahlung existiert
-		if (powerDifAvg5 < -1.9 && batSoc < 95) {
+		if (powerDifAvg5 < -1.9 && batSoC < 95) {
 			powerLack = true;
 		}
 
 		// Mangel, wenn
 		//	-> mindestens 1kW vom Stromnetz / Akku bezogen werden
 		//	-> der Akkustand unterhalb von 60% ist
-		if (powerDifAvg5 < -0.9 && batSoc < 60) {
+		if (powerDifAvg5 < -0.9 && batSoC < 60) {
 			powerLack = true;
 		}
 
 		// Mangel, wenn
 		//    -> mindestens 0,5kW vom Stromnetz / Akku bezogen werden
 		//    -> der Akku unterhalb 30% ist
-		if (powerDifAvg5 < -0.5 && batSoc < 30) {
+		if (powerDifAvg5 < -0.5 && batSoC < 30) {
 			powerLack = true;
 		}
 
 		// Mangel, wenn
 		//    -> überhaupt vom Stromnetz / Akku bezogen werden
 		//    -> der Akku unterhalb 10% ist
-		if (powerDifAvg5 < 0 && batSoc < 10) {
+		if (powerDifAvg5 < 0 && batSoC < 10) {
 			powerLack = true;
 		}
 
@@ -59,7 +60,7 @@ export class AnalyzerLack {
 			powerLack = true;
 		}
 
-		const msg = `LackAnalysis # Lack GridPowerAvg5=${gridPowerAvg5} => PowerLack:${powerLack} SOC=${batSoc}`;
+		const msg = `LackAnalysis # Lack GridPowerAvg5=${gridPowerAvg5} => PowerLack:${powerLack} SOC=${batSoC}`;
 		const reportedLack: boolean = ((await this.adapter.getStateAsync(INTERNAL_STATE_EEG.LOSS))?.val as boolean) ?? false;
 
 		if (powerLack && !reportedLack) {

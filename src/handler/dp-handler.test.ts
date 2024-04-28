@@ -1,7 +1,7 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
-import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './dp-handler';
+import { addSubscriptions, createObjects, INTERNAL_STATE_EEG } from './dp-handler';
 
 const mockedPvGeneration = 'mockedPvGeneration';
 const mockedTotalLoad = 'mockedTotalLoad';
@@ -36,13 +36,6 @@ describe('dp-handler', () => {
 	});
 	describe('create Objects', () => {
 		[
-			EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
-			EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD,
-			EXTERNAL_STATE_LANDINGZONE.BAT_SOC,
-			EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION,
-			EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING,
-			EXTERNAL_STATE_LANDINGZONE.GRID_LOAD,
-			EXTERNAL_STATE_LANDINGZONE.BAT_LOAD,
 			INTERNAL_STATE_EEG.BONUS,
 			INTERNAL_STATE_EEG.LOSS,
 			INTERNAL_STATE_EEG.SOC_LAST_BONUS,

@@ -61,13 +61,19 @@ export class XId<T extends ioBroker.StateValue> {
 	}
 
 	public getValue = async (): Promise<T> => {
-		const val = (await this.adapter.getStateAsync(this.xid))?.val;
+		if (this.adapter === undefined) {
+			throw new Error('adapter is not defined');
+		}
+		const state = await this.adapter.getStateAsync(this.xid);
+		if (state === undefined || state == null) {
+			throw new Error('state is not defined:' + this.xid);
+		}
 
-		if (val === undefined) {
+		if (state.val === undefined) {
 			throw new Error('No value present in state: ' + this.xid);
 		}
 
-		return val as T;
+		return state.val as T;
 	};
 
 	public async setValue(value: T): ioBroker.SetStatePromise {

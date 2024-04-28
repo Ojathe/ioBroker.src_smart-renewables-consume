@@ -1,8 +1,8 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { AverageValue } from '../values/average-value';
 import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
-import { EXTERNAL_STATE_LANDINGZONE } from '../handler/dp-handler';
 import { round } from '../util/math';
+import { EXTERNAL_STATE_LANDINGZONE } from './landing-zone-repository';
 
 export interface AverageValueGroupMembers {
 	solarRadiation: AverageValue,

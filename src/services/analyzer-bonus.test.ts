@@ -4,8 +4,9 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
 import { PowerRepository } from '../repositories/power-repository';
-import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
+import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
 import { createMockedLandingZone } from '../repositories/power-repository.test';
+import { EXTERNAL_STATE_LANDINGZONE, LandingZoneRepoImpl } from '../repositories/landing-zone-repository';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -31,7 +32,9 @@ describe('analyzer-bonus', () => {
 		) => {
 			await createMockedLandingZone(adapter);
 			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
-			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, powerRepo);
+			const landingZoneRepo = await LandingZoneRepoImpl.create(adapter as unknown as AdapterInstance);
+
+			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, powerRepo, landingZoneRepo);
 
 			adapter.setState(powerRepo.members.powerBalance.current.xid, props.powerDifCurrent);
 			adapter.setState(powerRepo.members.powerBalance.avg.xid, props.powerDifAvg);
