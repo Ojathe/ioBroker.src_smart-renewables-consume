@@ -51,7 +51,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 		// TODO make sure that adapter will be restarted after config change
 		this.log.debug('config ' + this.config);
 
-		this.powerRepo = await PowerRepository.build(this);
+		this.powerRepo = await PowerRepository.create(this);
 		this.landingZoneRepo = await LandingZoneRepoImpl.create(this);
 		this.eegRepo = await EegRepositoryImpl.create(this);
 

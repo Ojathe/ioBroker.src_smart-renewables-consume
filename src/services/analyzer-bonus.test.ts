@@ -31,7 +31,7 @@ describe('analyzer-bonus', () => {
 			props: { powerDifCurrent: number; powerDifAvg: number; powerGridAvg: number } = defaultProps,
 		) => {
 			await createMockedLandingZone(adapter);
-			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
+			const powerRepo = await PowerRepository.create(adapter as unknown as AdapterInstance);
 			const landingZoneRepo = await LandingZoneRepoImpl.create(adapter as unknown as AdapterInstance);
 			const eegRepo = await EegRepositoryImpl.create(adapter as unknown as AdapterInstance);
 

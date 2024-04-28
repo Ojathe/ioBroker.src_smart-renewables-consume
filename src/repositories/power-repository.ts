@@ -71,7 +71,7 @@ export class PowerRepository {
 		};
 	}
 
-	static async build(adapter: AdapterInstance): Promise<PowerRepository> {
+	static async create(adapter: AdapterInstance): Promise<PowerRepository> {
 		const val = new PowerRepository();
 
 		val.solarRadiation = await AverageValue.build(adapter, 'solar-radiation', {

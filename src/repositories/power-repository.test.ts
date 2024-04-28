@@ -116,7 +116,7 @@ describe('power-repository', () => {
 
 	const initHandler = async () => {
 		await createMockedLandingZone(adapter);
-		return await PowerRepository.build(adapter as unknown as AdapterInstance);
+		return await PowerRepository.create(adapter as unknown as AdapterInstance);
 	};
 
 	const stateMap: Map<AggregatFunction, [string, object | undefined]> = new Map([
