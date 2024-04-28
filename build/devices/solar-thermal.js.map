@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/devices/solar-thermal.ts"],
+  "sourcesContent": ["import { Device } from './device';\nimport { ExtXidBool, ExtXidNumber } from '../values/extXId';\n\nexport interface SolarThermalConfig {\n\tsensors: {\n\t\tpumpOperating: ExtXidBool,\n\t\tpumpVoltage: ExtXidNumber,\n\t\tactualTemp: ExtXidNumber,\n\t\ttargetTemp: ExtXidNumber\n\t};\n}\n\nexport interface SolarThermal extends Device {\n\ttemperatures: Array<Promise<number>>;\n\tisCold: Promise<boolean>;\n\tisHot: Promise<boolean>;\n}"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["../../src/devices/buffer.ts"],
-  "sourcesContent": ["import { XidNumber } from '../values/xid';\n\nexport interface Device {\n\n}\n\nexport interface BufferConfig {\n\tsensors: Array<XidNumber>;\n}\n\nexport interface Buffer extends Device {\n\n}\n\nexport class FourSensorsBuffer implements Buffer {\n\tconstructor(config: BufferConfig) {\n\t\tconsole.log(config);\n\t}\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAcO,MAAM,kBAAoC;AAAA,EAChD,YAAY,QAAsB;AACjC,YAAQ,IAAI,MAAM;AAAA,EACnB;AACD;",
+  "sourcesContent": ["import { Device } from './device';\nimport { ExtXidNumber } from '../values/extXId';\n\nexport interface BufferConfig {\n\tsensors: Array<ExtXidNumber>;\n}\n\nexport interface Buffer extends Device {\n\ttemperatures: Array<Promise<number>>;\n\tisCold: Promise<boolean>;\n\tisHot: Promise<boolean>;\n}"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
   "names": []
 }

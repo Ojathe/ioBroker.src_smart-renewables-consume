@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/devices/ventilation-unit.ts"],
+  "sourcesContent": ["import { Device } from './device';\nimport { ExtXidNumber } from '../values/extXId';\n\nexport interface VentilationUnitConfig {\n\tsensors: {\n\t\tfanSpeed: ExtXidNumber,\n\t\ttempExhaustAir: ExtXidNumber,\n\t\ttempExtractAir: ExtXidNumber,\n\t\ttempOutdoorAir: ExtXidNumber,\n\t\ttempSupplyAir: ExtXidNumber\n\t\thumidityValue: ExtXidNumber,\n\t\tco2Value: ExtXidNumber\n\t};\n}\n\nexport interface VentilationUnit extends Device {\n\n}"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

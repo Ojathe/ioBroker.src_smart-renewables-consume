@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/devices/device.ts"],
+  "sourcesContent": ["import { EnergyFlowManager } from '../services/energy-flow-manager';\n\nexport interface Device {\n\n}\n\nexport interface AutomatedDevice extends Device {\n\tpriority: number,\n\testimatedConsumption: Promise<number>,\n\tstart: () => Promise<void>,\n\tstop: () => Promise<void>,\n\tforceStartNeeded: (efw: EnergyFlowManager) => Promise<boolean>,\n\tforceStopNeeded: (efw: EnergyFlowManager) => Promise<boolean>,\n\tautomationSwitch: Promise<boolean>,\n\tallowedBatteryConsumption: number\n}"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

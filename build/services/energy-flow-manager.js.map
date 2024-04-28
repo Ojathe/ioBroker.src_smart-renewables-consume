@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/services/energy-flow-manager.ts"],
+  "sourcesContent": ["import { PowerRepository } from '../repositories/power-repository';\nimport { LandingZoneRepository } from '../repositories/landing-zone-repository';\nimport { EegRepository } from '../repositories/eeg-repository';\nimport { HeatingRepository } from '../repositories/heating-repository';\nimport { AutomatedDevice } from '../devices/device';\n\nexport class EnergyFlowManager {\n\n\tconstructor(private powerRepo: PowerRepository,\n\t\tprivate landingZoneRepo: LandingZoneRepository,\n\t\tprivate eegRepo: EegRepository,\n\t\tprivate heatingRepository: HeatingRepository,\n\t\tprivate automatedDevices: Array<AutomatedDevice>) {\n\t}\n\n\tpublic run = async (): Promise<boolean> => {\n\n\t\tconst loss = await this.eegRepo.loss.getValue();\n\t\tconst bonus = await this.eegRepo.bonus.getValue();\n\t\tconst operating = await this.eegRepo.operating.getValue();\n\n\t\tif ((!loss && !bonus) || !operating) {\n\t\t\treturn false;\n\t\t}\n\n\t\treturn true;\n\t};\n}"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAMO,MAAM,kBAAkB;AAAA,EAE9B,YAAoB,WACX,iBACA,SACA,mBACA,kBAA0C;AAJ/B;AACX;AACA;AACA;AACA;AAAA,EACT;AAAA,EAEO,MAAM,YAA8B;AAE1C,UAAM,OAAO,MAAM,KAAK,QAAQ,KAAK,SAAS;AAC9C,UAAM,QAAQ,MAAM,KAAK,QAAQ,MAAM,SAAS;AAChD,UAAM,YAAY,MAAM,KAAK,QAAQ,UAAU,SAAS;AAExD,QAAK,CAAC,QAAQ,CAAC,SAAU,CAAC,WAAW;AACpC,aAAO;AAAA,IACR;AAEA,WAAO;AAAA,EACR;AACD;",
+  "names": []
+}

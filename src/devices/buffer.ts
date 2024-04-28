@@ -1,19 +1,12 @@
-import { XidNumber } from '../values/xid';
-
-export interface Device {
-
-}
+import { Device } from './device';
+import { ExtXidNumber } from '../values/extXId';
 
 export interface BufferConfig {
-	sensors: Array<XidNumber>;
+	sensors: Array<ExtXidNumber>;
 }
 
 export interface Buffer extends Device {
-
-}
-
-export class FourSensorsBuffer implements Buffer {
-	constructor(config: BufferConfig) {
-		console.log(config);
-	}
+	temperatures: Array<Promise<number>>;
+	isCold: Promise<boolean>;
+	isHot: Promise<boolean>;
 }

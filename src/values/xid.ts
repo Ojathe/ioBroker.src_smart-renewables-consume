@@ -65,6 +65,7 @@ export class XId<T extends ioBroker.StateValue> {
 			throw new Error('adapter is not defined');
 		}
 		const state = await this.adapter.getStateAsync(this.xid);
+
 		if (state === undefined || state == null) {
 			throw new Error('state is not defined:' + this.xid);
 		}
