@@ -20,23 +20,23 @@ export class PowerRepository {
 	private solarRadiation: AverageValue | undefined;
 	private powerBalance: AverageValue | undefined;
 	private powerBattery: AverageValue | undefined;
-	private _powerPv: AverageValue | undefined;
-	private _powerGrid: AverageValue | undefined;
+	private powerPv: AverageValue | undefined;
+	private powerGrid: AverageValue | undefined;
 
-	private constructor(private adapter: AdapterInstance) {
+	private constructor() {
 	}
 
 	public get members(): AverageValueGroupMembers {
 
-		if (!this.solarRadiation || !this._powerPv || !this.powerBalance || !this._powerGrid || !this.powerBattery) {
+		if (!this.solarRadiation || !this.powerPv || !this.powerBalance || !this.powerGrid || !this.powerBattery) {
 			throw new Error('make sure to build the value group before use its values');
 		}
 
 		return {
 			solarRadiation: this.solarRadiation,
-			powerPv: this._powerPv,
+			powerPv: this.powerPv,
 			powerBalance: this.powerBalance,
-			powerGrid: this._powerGrid,
+			powerGrid: this.powerGrid,
 			powerBattery: this.powerBattery,
 		};
 	}
@@ -72,7 +72,7 @@ export class PowerRepository {
 	}
 
 	static async build(adapter: AdapterInstance): Promise<PowerRepository> {
-		const val = new PowerRepository(adapter);
+		const val = new PowerRepository();
 
 		val.solarRadiation = await AverageValue.build(adapter, 'solar-radiation', {
 			desc: 'Average solar radiation',
@@ -80,7 +80,7 @@ export class PowerRepository {
 			unit: 'wm²',
 		});
 
-		val._powerPv = await AverageValue.build(adapter, 'power-pv', {
+		val.powerPv = await AverageValue.build(adapter, 'power-pv', {
 			desc: 'PV generation',
 			xidSource: EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
 			unit: 'kW',
@@ -110,7 +110,7 @@ export class PowerRepository {
 			},
 		});
 
-		val._powerGrid = await AverageValue.build(adapter, 'power-grid', {
+		val.powerGrid = await AverageValue.build(adapter, 'power-grid', {
 			desc: 'amount of generation(+) or buying(-) of energy',
 			xidSource: EXTERNAL_STATE_LANDINGZONE.GRID_LOAD,
 			async mutation(val: number) {
