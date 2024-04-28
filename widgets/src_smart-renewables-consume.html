@@ -6,9 +6,9 @@
 	Copyright 2024 kjub87 oliver.jathe@gmx.de
 -->
 <!-- here you can include so many css as you want -->
-<link rel="stylesheet" href="widgets/src_smart-renewables-consume/css/style.css" />
+<!--<link rel="stylesheet" href="widgets/src_smart-renewables-consume/css/style.css" />-->
 <!-- here you can include so many js-files as you want -->
-<script type="text/javascript" src="widgets/src_smart-renewables-consume/js/src_smart-renewables-consume.js"></script>
+<!--<script type="text/javascript" src="widgets/src_smart-renewables-consume/js/src_smart-renewables-consume.js"></script>-->
 
 <!-- the full description of format in data-vis-attrs can be found here:
 	https://github.com/ioBroker/ioBroker.vis/blob/master/www/js/visEditInspect.js#L39
@@ -99,37 +99,37 @@
 	You can do "if" conditions and "for" cycles.
 
 -->
-<script id="tplSrc_smart-renewables-consumeShowInstance"
-		type="text/ejs"
-		class="vis-tpl"
-		data-vis-prev='<div id="prev_tplSrc_smart-renewables-consumeShowInstance" style="position: relative; text-align: initial;padding: 4px "><div class="vis-widget_prev " style="width: 280px; height: 159px;" > <div class="src_smart-renewables-consume-class vis-widget-prev-body " style="padding:2px"> OID: hm-rpc.0.EEQ0006629.1.STATE<br> OID value: true<br> Color: <span style="color: rgb(128, 0, 0);">#800000</span><br> htmlText: <textarea readonly="" style="width:100%">asda</textarea></div>'
-		data-vis-attrs="oid/id;myColor/color;htmlText/text;"
-		data-vis-attrs0="group.extraSrc_smart-renewables-consume;extraAttr"
-		data-vis-set="src_smart-renewables-consume"
-		data-vis-type="helper"
-		data-vis-name="Show instance">
-	<div class="vis-widget <%== this.data.attr('class') %>" style="width:230px; height:210px;" id="<%= this.data.attr('wid') %>" >
-		<div class="src_smart-renewables-consume-class vis-widget-body <%== this.data.attr('class') %>" style="padding:2px" >
-			OID: <%= this.data.attr('oid') %><br>
-			OID value: <%== vis.states.attr(this.data['oid'] + '.val') %><br>
-			Color: <span style="color: <%= this.data.attr('myColor') %>"><%= this.data.attr('myColor') %></span><br>
-			extraAttr: <%== this.data.attr('extraAttr') %><br>
-			Browser instance: <%= vis.instance %><br>
-			htmlText: <textarea readonly style="width: calc(100% - 10px)"><%== this.data.attr('htmlText') %></textarea><br>
-		</div>
-	</div>
-</script>
+<!--<script id="tplSrc_smart-renewables-consumeShowInstance"-->
+<!--		type="text/ejs"-->
+<!--		class="vis-tpl"-->
+<!--		data-vis-prev='<div id="prev_tplSrc_smart-renewables-consumeShowInstance" style="position: relative; text-align: initial;padding: 4px "><div class="vis-widget_prev " style="width: 280px; height: 159px;" > <div class="src_smart-renewables-consume-class vis-widget-prev-body " style="padding:2px"> OID: hm-rpc.0.EEQ0006629.1.STATE<br> OID value: true<br> Color: <span style="color: rgb(128, 0, 0);">#800000</span><br> htmlText: <textarea readonly="" style="width:100%">asda</textarea></div>'-->
+<!--		data-vis-attrs="oid/id;myColor/color;htmlText/text;"-->
+<!--		data-vis-attrs0="group.extraSrc_smart-renewables-consume;extraAttr"-->
+<!--		data-vis-set="src_smart-renewables-consume"-->
+<!--		data-vis-type="helper"-->
+<!--		data-vis-name="Show instance">-->
+<!--	<div class="vis-widget <%== this.data.attr('class') %>" style="width:230px; height:210px;" id="<%= this.data.attr('wid') %>" >-->
+<!--		<div class="src_smart-renewables-consume-class vis-widget-body <%== this.data.attr('class') %>" style="padding:2px" >-->
+<!--			OID: <%= this.data.attr('oid') %><br>-->
+<!--			OID value: <%== vis.states.attr(this.data['oid'] + '.val') %><br>-->
+<!--			Color: <span style="color: <%= this.data.attr('myColor') %>"><%= this.data.attr('myColor') %></span><br>-->
+<!--			extraAttr: <%== this.data.attr('extraAttr') %><br>-->
+<!--			Browser instance: <%= vis.instance %><br>-->
+<!--			htmlText: <textarea readonly style="width: calc(100% - 10px)"><%== this.data.attr('htmlText') %></textarea><br>-->
+<!--		</div>-->
+<!--	</div>-->
+<!--</script>-->
 
-<script id="tplSrc_smart-renewables-consumeHelper"
-		type="text/ejs"
-		class="vis-tpl"
-		data-vis-prev='<div id="prev_tplSrc_smart-renewables-consumeHelper" style="position: relative; text-align: initial;padding: 4px "><div class="vis-widget_prev " style="width: 280px; height: 159px;" > <div class="src_smart-renewables-consume-class vis-widget-prev-body " style="padding:2px"> OID: hm-rpc.0.EEQ0006629.1.STATE<br> OID value: true<br> Color: <span style="color: rgb(128, 0, 0);">#800000</span><br> htmlText: <textarea readonly="" style="width:100%">asda</textarea></div>'
-		data-vis-attrs="oid/id;myColor/color;htmlText/text;"
-		data-vis-attrs0="group.extraSrc_smart-renewables-consume;extraAttr"
-		data-vis-set="src_smart-renewables-consume"
-		data-vis-type="helper"
-		data-vis-name="Helper">
-	<div class="vis-widget <%== this.data.attr('class') %>" style="overflow:visible; width: 230px; height: 210px" id="<%= this.data.attr('wid') %>"><%
-		vis.binds['src_smart-renewables-consume'].createWidget(this.data.wid, this.view, this.data, this.style);
-	%></div>
-</script>
+<!--<script id="tplSrc_smart-renewables-consumeHelper"-->
+<!--		type="text/ejs"-->
+<!--		class="vis-tpl"-->
+<!--		data-vis-prev='<div id="prev_tplSrc_smart-renewables-consumeHelper" style="position: relative; text-align: initial;padding: 4px "><div class="vis-widget_prev " style="width: 280px; height: 159px;" > <div class="src_smart-renewables-consume-class vis-widget-prev-body " style="padding:2px"> OID: hm-rpc.0.EEQ0006629.1.STATE<br> OID value: true<br> Color: <span style="color: rgb(128, 0, 0);">#800000</span><br> htmlText: <textarea readonly="" style="width:100%">asda</textarea></div>'-->
+<!--		data-vis-attrs="oid/id;myColor/color;htmlText/text;"-->
+<!--		data-vis-attrs0="group.extraSrc_smart-renewables-consume;extraAttr"-->
+<!--		data-vis-set="src_smart-renewables-consume"-->
+<!--		data-vis-type="helper"-->
+<!--		data-vis-name="Helper">-->
+<!--	<div class="vis-widget <%== this.data.attr('class') %>" style="overflow:visible; width: 230px; height: 210px" id="<%= this.data.attr('wid') %>"><%-->
+<!--		vis.binds['src_smart-renewables-consume'].createWidget(this.data.wid, this.view, this.data, this.style);-->
+<!--	%></div>-->
+<!--</script>-->

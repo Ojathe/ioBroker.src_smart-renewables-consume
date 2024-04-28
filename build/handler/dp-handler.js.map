@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/handler/dp-handler.ts"],
-  "sourcesContent": ["import { AdapterInstance } from '@iobroker/adapter-core';\n\nexport const addSubscriptions = (adapter: AdapterInstance, config: ioBroker.AdapterConfig): void => {\n\tadapter.subscribeForeignStates(config.optionSourcePvGeneration);\n\tadapter.subscribeForeignStates(config.optionSourceTotalLoad);\n\tadapter.subscribeForeignStates(config.optionSourceBatterySoc);\n\tadapter.subscribeForeignStates(config.optionSourceSolarRadiation);\n\tadapter.subscribeForeignStates(config.optionSourceIsGridBuying);\n\tadapter.subscribeForeignStates(config.optionSourceIsGridLoad);\n\tadapter.subscribeForeignStates(config.optionSourceBatteryLoad);\n};\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAEO,MAAM,mBAAmB,CAAC,SAA0B,WAAyC;AACnG,UAAQ,uBAAuB,OAAO,wBAAwB;AAC9D,UAAQ,uBAAuB,OAAO,qBAAqB;AAC3D,UAAQ,uBAAuB,OAAO,sBAAsB;AAC5D,UAAQ,uBAAuB,OAAO,0BAA0B;AAChE,UAAQ,uBAAuB,OAAO,wBAAwB;AAC9D,UAAQ,uBAAuB,OAAO,sBAAsB;AAC5D,UAAQ,uBAAuB,OAAO,uBAAuB;AAC9D;",
-  "names": []
-}

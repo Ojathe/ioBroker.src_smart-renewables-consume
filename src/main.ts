@@ -10,13 +10,9 @@ import { scheduleJob } from 'node-schedule';
 import { AnalyzerLack } from './services/analyzer-lack';
 import { AnalyzerBonus } from './services/analyzer-bonus';
 import { PowerRepository } from './repositories/power-repository';
-import { addSubscriptions } from './handler/dp-handler';
-import {
-	EXTERNAL_STATE_LANDINGZONE,
-	LandingZoneRepoImpl,
-	LandingZoneRepository,
-} from './repositories/landing-zone-repository';
+import { LandingZoneRepoImpl, LandingZoneRepository } from './repositories/landing-zone-repository';
 import { EegRepository, EegRepositoryImpl } from './repositories/eeg-repository';
+import { ExternalStateConnector } from './services/external-state-connector';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";
@@ -28,6 +24,7 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 
 	private analyzerBonus: AnalyzerBonus | undefined;
 	private analyzerLack: AnalyzerLack | undefined;
+	private externalStateConnector: ExternalStateConnector | undefined;
 
 	public constructor(options: Partial<utils.AdapterOptions> = {}) {
 		super({
@@ -49,49 +46,35 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// TODO make sure that adapter will be restarted after config change
-		this.log.debug('config ' + this.config);
+		try {
+			this.log.debug('config ' + this.config);
 
-		this.powerRepo = await PowerRepository.create(this);
-		this.landingZoneRepo = await LandingZoneRepoImpl.create(this);
-		this.eegRepo = await EegRepositoryImpl.create(this);
+			this.landingZoneRepo = await LandingZoneRepoImpl.create(this);
+			this.powerRepo = await PowerRepository.create(this);
+			this.eegRepo = await EegRepositoryImpl.create(this);
+			await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
 
-		addSubscriptions(this, this.config);
+			this.externalStateConnector = await ExternalStateConnector.create(this, this.config);
 
-		await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
-		// TODO repository initializing
+			this.analyzerBonus = new AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
+			this.analyzerLack = new AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
 
-		// TODO Work in progress
-		const configToMap = [
-			this.config.optionSourcePvGeneration,
-			this.config.optionSourceBatterySoc,
-			this.config.optionSourceIsGridBuying,
-			this.config.optionSourceIsGridLoad,
-			this.config.optionSourceSolarRadiation,
-			this.config.optionSourceTotalLoad,
-			this.config.optionSourceBatteryLoad,
-		];
+			// calculating average Values
+			// TODO make interval configurable
+			scheduleJob('*/20 * * * * *', () => {
+				console.debug('calculating average Values');
+				this.powerRepo!.calculate();
+			});
 
-		for (const externalId of configToMap) {
-			console.debug('initializing: ' + externalId);
-			await this.updateIngoingValue(externalId);
+			scheduleJob('*/30 * * * * *', () => {
+				console.debug('C H E C K I N G   F O R   B O N U S  /  L A C K');
+				this.analyzerBonus!.run();
+				this.analyzerLack!.run();
+			});
+		} catch (error) {
+			console.error(error);
+			throw error;
 		}
-
-
-		this.analyzerBonus = new AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
-		this.analyzerLack = new AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
-
-		// calculating average Values
-		// TODO make interval configurable
-		scheduleJob('*/20 * * * * *', () => {
-			console.debug('calculating average Values');
-			this.powerRepo!.calculate();
-		});
-
-		scheduleJob('*/30 * * * * *', () => {
-			console.debug('C H E C K I N G   F O R   B O N U S  /  L A C K');
-			this.analyzerBonus!.run();
-			this.analyzerLack!.run();
-		});
 	}
 
 	// private async onReady(): Promise<void> {
@@ -205,57 +188,12 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			// The state was changed
 			//this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
 
-			this.updateIngoingStateWithValue(id, state.val);
+			this.externalStateConnector?.onSubscribedStateChanged(id, state.val);
 		} else {
 			// The state was deleted
 			this.log.info(`state ${id} deleted`);
 		}
 	}
-
-	private updateIngoingStateWithValue(externalId: string, value: any): void {
-		const xidtoUpdate = this.getInnerStateXid(externalId);
-		if (xidtoUpdate) {
-			this.setState(xidtoUpdate, { val: value, ack: true });
-			console.debug(`Updating ingoing-value '${xidtoUpdate}' from '${externalId}' with '${value}'`);
-		}
-	}
-
-	private async updateIngoingValue(externalId: string): Promise<void> {
-		const state = await this.getForeignStateAsync(externalId);
-
-		console.debug('state', state);
-		this.updateIngoingStateWithValue(externalId, state?.val);
-	}
-
-	private getInnerStateXid(externalId: string): string | undefined {
-		let xidtoUpdate;
-		switch (externalId) {
-			case this.config.optionSourcePvGeneration:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
-				break;
-			case this.config.optionSourceBatterySoc:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
-				break;
-			case this.config.optionSourceIsGridBuying:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
-				break;
-			case this.config.optionSourceIsGridLoad:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
-				break;
-			case this.config.optionSourceSolarRadiation:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
-				break;
-			case this.config.optionSourceTotalLoad:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
-				break;
-			case this.config.optionSourceBatteryLoad:
-				xidtoUpdate = EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
-				break;
-		}
-
-		return xidtoUpdate;
-	}
-
 }
 
 if (require.main !== module) {

@@ -26,15 +26,16 @@ var import_node_schedule = require("node-schedule");
 var import_analyzer_lack = require("./services/analyzer-lack");
 var import_analyzer_bonus = require("./services/analyzer-bonus");
 var import_power_repository = require("./repositories/power-repository");
-var import_dp_handler = require("./handler/dp-handler");
 var import_landing_zone_repository = require("./repositories/landing-zone-repository");
 var import_eeg_repository = require("./repositories/eeg-repository");
+var import_external_state_connector = require("./services/external-state-connector");
 class SrcSmartRenewablesConsume extends utils.Adapter {
   powerRepo;
   landingZoneRepo;
   eegRepo;
   analyzerBonus;
   analyzerLack;
+  externalStateConnector;
   constructor(options = {}) {
     super({
       ...options,
@@ -48,36 +49,28 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
    * Is called when databases are connected and adapter received configuration.
    */
   async onReady() {
-    this.log.debug("config " + this.config);
-    this.powerRepo = await import_power_repository.PowerRepository.build(this);
-    this.landingZoneRepo = await import_landing_zone_repository.LandingZoneRepoImpl.create(this);
-    this.eegRepo = await import_eeg_repository.EegRepositoryImpl.create(this);
-    (0, import_dp_handler.addSubscriptions)(this, this.config);
-    await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
-    const configToMap = [
-      this.config.optionSourcePvGeneration,
-      this.config.optionSourceBatterySoc,
-      this.config.optionSourceIsGridBuying,
-      this.config.optionSourceIsGridLoad,
-      this.config.optionSourceSolarRadiation,
-      this.config.optionSourceTotalLoad,
-      this.config.optionSourceBatteryLoad
-    ];
-    for (const externalId of configToMap) {
-      console.debug("initializing: " + externalId);
-      await this.updateIngoingValue(externalId);
+    try {
+      this.log.debug("config " + this.config);
+      this.landingZoneRepo = await import_landing_zone_repository.LandingZoneRepoImpl.create(this);
+      this.powerRepo = await import_power_repository.PowerRepository.create(this);
+      this.eegRepo = await import_eeg_repository.EegRepositoryImpl.create(this);
+      await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
+      this.externalStateConnector = await import_external_state_connector.ExternalStateConnector.create(this, this.config);
+      this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
+      this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
+      (0, import_node_schedule.scheduleJob)("*/20 * * * * *", () => {
+        console.debug("calculating average Values");
+        this.powerRepo.calculate();
+      });
+      (0, import_node_schedule.scheduleJob)("*/30 * * * * *", () => {
+        console.debug("C H E C K I N G   F O R   B O N U S  /  L A C K");
+        this.analyzerBonus.run();
+        this.analyzerLack.run();
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-    this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
-    this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
-    (0, import_node_schedule.scheduleJob)("*/20 * * * * *", () => {
-      console.debug("calculating average Values");
-      this.powerRepo.calculate();
-    });
-    (0, import_node_schedule.scheduleJob)("*/30 * * * * *", () => {
-      console.debug("C H E C K I N G   F O R   B O N U S  /  L A C K");
-      this.analyzerBonus.run();
-      this.analyzerLack.run();
-    });
   }
   // private async onReady(): Promise<void> {
   // 	// Initialize your adapter here
@@ -175,50 +168,12 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
    * Is called if a subscribed state changes
    */
   onStateChange(id, state) {
+    var _a;
     if (state) {
-      this.updateIngoingStateWithValue(id, state.val);
+      (_a = this.externalStateConnector) == null ? void 0 : _a.onSubscribedStateChanged(id, state.val);
     } else {
       this.log.info(`state ${id} deleted`);
     }
-  }
-  updateIngoingStateWithValue(externalId, value) {
-    const xidtoUpdate = this.getInnerStateXid(externalId);
-    if (xidtoUpdate) {
-      this.setState(xidtoUpdate, { val: value, ack: true });
-      console.debug(`Updating ingoing-value '${xidtoUpdate}' from '${externalId}' with '${value}'`);
-    }
-  }
-  async updateIngoingValue(externalId) {
-    const state = await this.getForeignStateAsync(externalId);
-    console.debug("state", state);
-    this.updateIngoingStateWithValue(externalId, state == null ? void 0 : state.val);
-  }
-  getInnerStateXid(externalId) {
-    let xidtoUpdate;
-    switch (externalId) {
-      case this.config.optionSourcePvGeneration:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
-        break;
-      case this.config.optionSourceBatterySoc:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
-        break;
-      case this.config.optionSourceIsGridBuying:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
-        break;
-      case this.config.optionSourceIsGridLoad:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
-        break;
-      case this.config.optionSourceSolarRadiation:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
-        break;
-      case this.config.optionSourceTotalLoad:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
-        break;
-      case this.config.optionSourceBatteryLoad:
-        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
-        break;
-    }
-    return xidtoUpdate;
   }
 }
 if (require.main !== module) {

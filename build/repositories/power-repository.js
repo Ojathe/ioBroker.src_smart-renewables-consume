@@ -26,23 +26,22 @@ var import_state_util = require("../util/state-util");
 var import_math = require("../util/math");
 var import_landing_zone_repository = require("./landing-zone-repository");
 class PowerRepository {
-  constructor(adapter) {
-    this.adapter = adapter;
-  }
   solarRadiation;
   powerBalance;
   powerBattery;
-  _powerPv;
-  _powerGrid;
+  powerPv;
+  powerGrid;
+  constructor() {
+  }
   get members() {
-    if (!this.solarRadiation || !this._powerPv || !this.powerBalance || !this._powerGrid || !this.powerBattery) {
+    if (!this.solarRadiation || !this.powerPv || !this.powerBalance || !this.powerGrid || !this.powerBattery) {
       throw new Error("make sure to build the value group before use its values");
     }
     return {
       solarRadiation: this.solarRadiation,
-      powerPv: this._powerPv,
+      powerPv: this.powerPv,
       powerBalance: this.powerBalance,
-      powerGrid: this._powerGrid,
+      powerGrid: this.powerGrid,
       powerBattery: this.powerBattery
     };
   }
@@ -73,14 +72,14 @@ class PowerRepository {
       powerBattery: this.members.powerBattery.current.getValue
     };
   }
-  static async build(adapter) {
-    const val = new PowerRepository(adapter);
+  static async create(adapter) {
+    const val = new PowerRepository();
     val.solarRadiation = await import_average_value.AverageValue.build(adapter, "solar-radiation", {
       desc: "Average solar radiation",
       xidSource: import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION,
       unit: "wm\xB2"
     });
-    val._powerPv = await import_average_value.AverageValue.build(adapter, "power-pv", {
+    val.powerPv = await import_average_value.AverageValue.build(adapter, "power-pv", {
       desc: "PV generation",
       xidSource: import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.PV_GENERATION,
       unit: "kW"
@@ -104,7 +103,7 @@ class PowerRepository {
         return (0, import_math.round)(pvPower - load);
       }
     });
-    val._powerGrid = await import_average_value.AverageValue.build(adapter, "power-grid", {
+    val.powerGrid = await import_average_value.AverageValue.build(adapter, "power-grid", {
       desc: "amount of generation(+) or buying(-) of energy",
       xidSource: import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.GRID_LOAD,
       async mutation(val2) {
