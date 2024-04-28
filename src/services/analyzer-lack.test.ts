@@ -4,9 +4,9 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerLack } from './analyzer-lack';
 import { PowerRepository } from '../repositories/power-repository';
-import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
 import { createMockedLandingZone } from '../repositories/power-repository.test';
 import { EXTERNAL_STATE_LANDINGZONE, LandingZoneRepoImpl } from '../repositories/landing-zone-repository';
+import { EegRepositoryImpl, INTERNAL_STATE_EEG } from '../repositories/eeg-repository';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -38,7 +38,9 @@ describe('analyzer-lack', () => {
 			await createMockedLandingZone(adapter);
 			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
 			const landingZoneRepo = await LandingZoneRepoImpl.create(adapter as unknown as AdapterInstance);
-			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, powerRepo, landingZoneRepo);
+			const eegRepo = await EegRepositoryImpl.create(adapter as unknown as AdapterInstance);
+
+			const analyzer = new AnalyzerLack(powerRepo, landingZoneRepo, eegRepo);
 
 			adapter.setState(powerRepo.members.powerBalance.avg5.xid, props.powerDifAvg5);
 			adapter.setState(powerRepo.members.powerGrid.avg5.xid, props.powerGridAvg5);

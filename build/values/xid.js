@@ -30,6 +30,9 @@ class XId {
     this.xid = xid;
     this.adapter = adapter;
     this.isManaged = isManaged;
+    if (adapter === void 0) {
+      throw new Error("adapter has to be defined!");
+    }
   }
   static async asManagedBase(adapter, xid, typeName, defaultValue, props = {}) {
     const object = await adapter.getObjectAsync(xid);
@@ -58,14 +61,19 @@ class XId {
     }
     return new XId(xid, adapter);
   }
-  async getValue() {
-    var _a;
-    const val = (_a = await this.adapter.getStateAsync(this.xid)) == null ? void 0 : _a.val;
-    if (val === void 0) {
+  getValue = async () => {
+    if (this.adapter === void 0) {
+      throw new Error("adapter is not defined");
+    }
+    const state = await this.adapter.getStateAsync(this.xid);
+    if (state === void 0 || state == null) {
+      throw new Error("state is not defined:" + this.xid);
+    }
+    if (state.val === void 0) {
       throw new Error("No value present in state: " + this.xid);
     }
-    return val;
-  }
+    return state.val;
+  };
   async setValue(value) {
     if (!this.isManaged) {
       throw new Error("Non managed xid's are not allowed to write values: " + this.xid);
@@ -81,6 +89,9 @@ class XidString extends XId {
 class XidBool extends XId {
   static async asReadable(adapter, xid) {
     return XId.asReadableBase(adapter, xid, "boolean");
+  }
+  static async asManaged(adapter, xid, defaultValue = false, props) {
+    return XId.asManagedBase(adapter, xid, "boolean", defaultValue, props);
   }
 }
 class XidNumber extends XId {

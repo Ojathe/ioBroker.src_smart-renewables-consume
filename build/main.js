@@ -25,11 +25,14 @@ var utils = __toESM(require("@iobroker/adapter-core"));
 var import_node_schedule = require("node-schedule");
 var import_analyzer_lack = require("./services/analyzer-lack");
 var import_analyzer_bonus = require("./services/analyzer-bonus");
-var import_average_value_group = require("./values/average-value-group");
+var import_power_repository = require("./repositories/power-repository");
 var import_dp_handler = require("./handler/dp-handler");
-var import_state_util = require("./util/state-util");
+var import_landing_zone_repository = require("./repositories/landing-zone-repository");
+var import_eeg_repository = require("./repositories/eeg-repository");
 class SrcSmartRenewablesConsume extends utils.Adapter {
-  avgValueHandler;
+  powerRepo;
+  landingZoneRepo;
+  eegRepo;
   analyzerBonus;
   analyzerLack;
   constructor(options = {}) {
@@ -46,9 +49,11 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
    */
   async onReady() {
     this.log.debug("config " + this.config);
-    await (0, import_dp_handler.createObjects)(this);
+    this.powerRepo = await import_power_repository.PowerRepository.build(this);
+    this.landingZoneRepo = await import_landing_zone_repository.LandingZoneRepoImpl.create(this);
+    this.eegRepo = await import_eeg_repository.EegRepositoryImpl.create(this);
     (0, import_dp_handler.addSubscriptions)(this, this.config);
-    await (0, import_state_util.setStateAsBoolean)(this, import_dp_handler.INTERNAL_STATE_EEG.OPERATION, this.config.optionEnergyManagementActive);
+    await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
     const configToMap = [
       this.config.optionSourcePvGeneration,
       this.config.optionSourceBatterySoc,
@@ -62,12 +67,11 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
       console.debug("initializing: " + externalId);
       await this.updateIngoingValue(externalId);
     }
-    this.avgValueHandler = await import_average_value_group.AverageValueGroup.build(this);
-    this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this, this.avgValueHandler);
-    this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this, this.avgValueHandler);
+    this.analyzerBonus = new import_analyzer_bonus.AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
+    this.analyzerLack = new import_analyzer_lack.AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
     (0, import_node_schedule.scheduleJob)("*/20 * * * * *", () => {
       console.debug("calculating average Values");
-      this.avgValueHandler.calculate();
+      this.powerRepo.calculate();
     });
     (0, import_node_schedule.scheduleJob)("*/30 * * * * *", () => {
       console.debug("C H E C K I N G   F O R   B O N U S  /  L A C K");
@@ -193,25 +197,25 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
     let xidtoUpdate;
     switch (externalId) {
       case this.config.optionSourcePvGeneration:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.PV_GENERATION;
         break;
       case this.config.optionSourceBatterySoc:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.BAT_SOC;
         break;
       case this.config.optionSourceIsGridBuying:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING;
         break;
       case this.config.optionSourceIsGridLoad:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.GRID_LOAD;
         break;
       case this.config.optionSourceSolarRadiation:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.SOLAR_RADIATION;
         break;
       case this.config.optionSourceTotalLoad:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.TOTAL_LOAD;
         break;
       case this.config.optionSourceBatteryLoad:
-        xidtoUpdate = import_dp_handler.EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
+        xidtoUpdate = import_landing_zone_repository.EXTERNAL_STATE_LANDINGZONE.BAT_LOAD;
         break;
     }
     return xidtoUpdate;

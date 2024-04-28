@@ -95,6 +95,10 @@ export class XidBool extends XId<boolean> {
 	static async asReadable(adapter: AdapterInstance, xid: string): Promise<XidBool> {
 		return XId.asReadableBase<boolean>(adapter, xid, 'boolean');
 	}
+
+	static async asManaged(adapter: AdapterInstance, xid: string, defaultValue: boolean = false, props?: CreateXIdProps): Promise<XidBool> {
+		return XId.asManagedBase<boolean>(adapter, xid, 'boolean', defaultValue, props);
+	}
 }
 
 export class XidNumber extends XId<number> {

@@ -1,14 +1,13 @@
-import { AdapterInstance } from '@iobroker/adapter-core';
 import { PowerRepository } from '../repositories/power-repository';
-import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
 import { LandingZoneRepository } from '../repositories/landing-zone-repository';
+import { EegRepository } from '../repositories/eeg-repository';
 
 export class AnalyzerLack {
 	// TODO move to config
 	public static readonly lackReportingThreshold = -0.5;
 	public static readonly gridBuyingThreshold = -0.2;
 
-	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository) {
+	constructor(private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository, private eegRepo: EegRepository) {
 	}
 
 	public async run(): Promise<void> {
@@ -61,7 +60,7 @@ export class AnalyzerLack {
 		}
 
 		const msg = `LackAnalysis # Lack GridPowerAvg5=${gridPowerAvg5} => PowerLack:${powerLack} SOC=${batSoC}`;
-		const reportedLack: boolean = ((await this.adapter.getStateAsync(INTERNAL_STATE_EEG.LOSS))?.val as boolean) ?? false;
+		const reportedLack = await this.eegRepo.loss.getValue();
 
 		if (powerLack && !reportedLack) {
 			console.log(msg + ' || STATE CHANGED');
@@ -70,6 +69,6 @@ export class AnalyzerLack {
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(INTERNAL_STATE_EEG.LOSS, powerLack, true);
+		await this.eegRepo.loss.setValue(powerLack);
 	}
 }

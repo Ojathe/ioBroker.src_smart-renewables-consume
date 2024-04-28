@@ -10,14 +10,22 @@ import { scheduleJob } from 'node-schedule';
 import { AnalyzerLack } from './services/analyzer-lack';
 import { AnalyzerBonus } from './services/analyzer-bonus';
 import { PowerRepository } from './repositories/power-repository';
-import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './handler/dp-handler';
-import { setStateAsBoolean } from './util/state-util';
+import { addSubscriptions } from './handler/dp-handler';
+import {
+	EXTERNAL_STATE_LANDINGZONE,
+	LandingZoneRepoImpl,
+	LandingZoneRepository,
+} from './repositories/landing-zone-repository';
+import { EegRepository, EegRepositoryImpl } from './repositories/eeg-repository';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";
 
 class SrcSmartRenewablesConsume extends utils.Adapter {
 	private powerRepo: PowerRepository | undefined;
+	private landingZoneRepo: LandingZoneRepository | undefined;
+	private eegRepo: EegRepository | undefined;
+
 	private analyzerBonus: AnalyzerBonus | undefined;
 	private analyzerLack: AnalyzerLack | undefined;
 
@@ -43,11 +51,14 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 		// TODO make sure that adapter will be restarted after config change
 		this.log.debug('config ' + this.config);
 
-		await createObjects(this);
+		this.powerRepo = await PowerRepository.build(this);
+		this.landingZoneRepo = await LandingZoneRepoImpl.create(this);
+		this.eegRepo = await EegRepositoryImpl.create(this);
 
 		addSubscriptions(this, this.config);
 
-		await setStateAsBoolean(this, INTERNAL_STATE_EEG.OPERATION, this.config.optionEnergyManagementActive);
+		await this.eegRepo.operating.setValue(this.config.optionEnergyManagementActive);
+		// TODO repository initializing
 
 		// TODO Work in progress
 		const configToMap = [
@@ -65,9 +76,9 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			await this.updateIngoingValue(externalId);
 		}
 
-		this.powerRepo = await PowerRepository.build(this);
-		this.analyzerBonus = new AnalyzerBonus(this, this.powerRepo);
-		this.analyzerLack = new AnalyzerLack(this, this.powerRepo);
+
+		this.analyzerBonus = new AnalyzerBonus(this.powerRepo, this.landingZoneRepo, this.eegRepo);
+		this.analyzerLack = new AnalyzerLack(this.powerRepo, this.landingZoneRepo, this.eegRepo);
 
 		// calculating average Values
 		// TODO make interval configurable

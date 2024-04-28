@@ -4,9 +4,9 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
 import { PowerRepository } from '../repositories/power-repository';
-import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
 import { createMockedLandingZone } from '../repositories/power-repository.test';
 import { EXTERNAL_STATE_LANDINGZONE, LandingZoneRepoImpl } from '../repositories/landing-zone-repository';
+import { EegRepositoryImpl, INTERNAL_STATE_EEG } from '../repositories/eeg-repository';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -33,8 +33,9 @@ describe('analyzer-bonus', () => {
 			await createMockedLandingZone(adapter);
 			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
 			const landingZoneRepo = await LandingZoneRepoImpl.create(adapter as unknown as AdapterInstance);
+			const eegRepo = await EegRepositoryImpl.create(adapter as unknown as AdapterInstance);
 
-			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, powerRepo, landingZoneRepo);
+			const analyzer = new AnalyzerBonus(powerRepo, landingZoneRepo, eegRepo);
 
 			adapter.setState(powerRepo.members.powerBalance.current.xid, props.powerDifCurrent);
 			adapter.setState(powerRepo.members.powerBalance.avg.xid, props.powerDifAvg);
@@ -96,7 +97,9 @@ describe('analyzer-bonus', () => {
 
 					// arrange
 					const { analyzer } = await init(testCase.props);
-					adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, testCase.bat);
+					adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, testCase.bat, true);
+					adapter.setState(INTERNAL_STATE_EEG.SOC_LAST_BONUS, -1, true);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.SOC_LAST_BONUS, -1);
 
 					// act
 					await analyzer.run();
@@ -107,7 +110,7 @@ describe('analyzer-bonus', () => {
 					asserts.assertStateHasValue(INTERNAL_STATE_EEG.BONUS, false);
 
 					// do not update last bonus battery charge
-					expect(adapter.setStateAsync).not.to.be.calledWith(INTERNAL_STATE_EEG.SOC_LAST_BONUS);
+					asserts.assertStateHasValue(INTERNAL_STATE_EEG.SOC_LAST_BONUS, -1);
 				});
 			});
 		});

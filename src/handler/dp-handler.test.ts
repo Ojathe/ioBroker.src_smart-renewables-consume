@@ -1,7 +1,7 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
 import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
-import { addSubscriptions, createObjects, INTERNAL_STATE_EEG } from './dp-handler';
+import { addSubscriptions } from './dp-handler';
 
 const mockedPvGeneration = 'mockedPvGeneration';
 const mockedTotalLoad = 'mockedTotalLoad';
@@ -33,27 +33,6 @@ describe('dp-handler', () => {
 		adapter.resetMockHistory();
 		// We want to start each test with a fresh database
 		database.clear();
-	});
-	describe('create Objects', () => {
-		[
-			INTERNAL_STATE_EEG.BONUS,
-			INTERNAL_STATE_EEG.LOSS,
-			INTERNAL_STATE_EEG.SOC_LAST_BONUS,
-			INTERNAL_STATE_EEG.OPERATION,
-		].forEach((testCase) => {
-			it(`should create state for ${testCase}`, async () => {
-				const asserts = utils.unit.createAsserts(database, adapter);
-
-				await createObjects(adapter as unknown as AdapterInstance);
-
-				// assert
-				expect(adapter.setObjectNotExistsAsync).to.calledWith(testCase);
-				expect(adapter.subscribeStates).to.calledWith(testCase);
-				expect(adapter.setStateAsync).to.calledWith(testCase);
-
-				asserts.assertStateExists(testCase);
-			});
-		});
 	});
 
 	describe('addSubscrptions', () => {

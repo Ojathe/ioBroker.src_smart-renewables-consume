@@ -103,7 +103,7 @@ class AverageValue {
     return new AverageValue(adapter, propertyName, iobrokerObjects, { desc, unit, mutation, source });
   }
   async calculate() {
-    var _a, _b;
+    var _a, _b, _c;
     let sourceVal = 0;
     if (this.source) {
       sourceVal = (_b = await ((_a = this.source) == null ? void 0 : _a.getValue())) != null ? _b : 0;
@@ -133,11 +133,11 @@ class AverageValue {
           aggregate: "none"
         }
       });
-      const values = result.result;
+      const values = (_c = result == null ? void 0 : result.result) != null ? _c : [];
       await this.calculateAvgValue(values, this.avg.xid);
       await this.calculateAvgValue(values, this.avg5.xid, start5Min);
     } catch (error) {
-      console.error(`calculateAvgValue(${await this.current.getValue()}) # ${error}`);
+      console.error(`calculateAvgValue(${this.current.xid}) # ${error}`);
     }
   }
   async calculateAvgValue(values, xidTarget, startInMs = 0) {

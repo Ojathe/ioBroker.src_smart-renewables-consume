@@ -1,17 +1,11 @@
-import { AdapterInstance } from '@iobroker/adapter-core';
 import { PowerRepository } from '../repositories/power-repository';
-import { INTERNAL_STATE_EEG } from '../handler/dp-handler';
-import { getStateAsBoolean } from '../util/state-util';
 import { LandingZoneRepository } from '../repositories/landing-zone-repository';
+import { EegRepository } from '../repositories/eeg-repository';
 
 export interface AnalyzerBonusProps {
 	getSellingThreshold: () => number;
 	getBonusReportThreshold: () => number;
 	getBatChargeMinimum: () => number;
-}
-
-export interface AnalyzerBonusProps {
-
 }
 
 export class AnalyzerBonus {
@@ -20,7 +14,7 @@ export class AnalyzerBonus {
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
 
-	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository) {
+	constructor(private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository, private eegRepo: EegRepository) {
 	}
 
 	public async run(): Promise<void> {
@@ -53,7 +47,7 @@ export class AnalyzerBonus {
 
 		const msg = `BonusAnalysis # Bonus PowerDif=${powerDif} PowerDifAvg=${powerDifAvg} => powerBonus:${powerBonus} SOC=${batSoC}`;
 
-		const reportedBonus = (await getStateAsBoolean(this.adapter, INTERNAL_STATE_EEG.BONUS)) ?? false;
+		const reportedBonus = await this.eegRepo.bonus.getValue();
 		if (powerBonus && !reportedBonus) {
 			console.log(msg + ' || STATE CHANGED');
 		} else {
@@ -62,10 +56,10 @@ export class AnalyzerBonus {
 
 		// update battery stand of charge
 		if (powerBonus) {
-			await this.adapter.setStateAsync(INTERNAL_STATE_EEG.SOC_LAST_BONUS, batSoC, true);
+			await this.eegRepo.socLastBonus.setValue(batSoC);
 		}
 
 		// Update the state
-		await this.adapter.setStateAsync(INTERNAL_STATE_EEG.BONUS, powerBonus, true);
+		await this.eegRepo.bonus.setValue(powerBonus);
 	}
 }
