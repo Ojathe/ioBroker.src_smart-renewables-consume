@@ -25,9 +25,9 @@ export class AnalyzerBonus {
 		let powerBonus = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDif = await this.powerRepo.values.current.powerBalance();
-		const powerDifAvg = await this.powerRepo.values.avg.powerBalance();
-		const gridPowerAvg = await this.powerRepo.values.avg.powerGrid();
+		const powerDif = await this.powerRepo.current.powerBalance();
+		const powerDifAvg = await this.powerRepo.avg.powerBalance();
+		const gridPowerAvg = await this.powerRepo.avg.powerGrid();
 
 		const batSoc = (await getStateAsNumber(this.adapter, EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) ?? 0;
 

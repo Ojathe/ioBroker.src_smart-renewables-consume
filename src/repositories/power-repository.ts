@@ -16,14 +16,6 @@ export type AverageValueGroupMemberValues = {
 	[key in keyof AverageValueGroupMembers]: () => Promise<number>
 }
 
-// export interface AverageValueGroupMemberValues {
-// 	solarRadiation: () => Promise<number>,
-// 	powerPv: () => Promise<number>,
-// 	powerBalance: () => Promise<number>,
-// 	powerGrid: () => Promise<number>,
-// 	powerBattery: () => Promise<number>
-// }
-
 export class PowerRepository {
 	private solarRadiation: AverageValue | undefined;
 	private powerBalance: AverageValue | undefined;
@@ -49,36 +41,34 @@ export class PowerRepository {
 		};
 	}
 
-	public get values(): {
-		current: AverageValueGroupMemberValues,
-		avg: AverageValueGroupMemberValues,
-		avg5: AverageValueGroupMemberValues
-	} {
-
+	public get avg(): AverageValueGroupMemberValues {
 		return {
-			current: {
-				solarRadiation: this.members.solarRadiation.current.getValue,
-				powerPv: this.members.powerPv.current.getValue,
-				powerBalance: this.members.powerBalance.current.getValue,
-				powerGrid: this.members.powerGrid.current.getValue,
-				powerBattery: this.members.powerBattery.current.getValue,
-			},
-			avg: {
-				solarRadiation: this.members.solarRadiation.avg.getValue,
-				powerPv: this.members.powerPv.avg.getValue,
-				powerBalance: this.members.powerBalance.avg.getValue,
-				powerGrid: this.members.powerGrid.avg.getValue,
-				powerBattery: this.members.powerBattery.avg.getValue,
-			},
-			avg5: {
-				solarRadiation: this.members.solarRadiation.avg5.getValue,
-				powerPv: this.members.powerPv.avg5.getValue,
-				powerBalance: this.members.powerBalance.avg5.getValue,
-				powerGrid: this.members.powerGrid.avg5.getValue,
-				powerBattery: this.members.powerBattery.avg5.getValue,
-			},
+			solarRadiation: this.members.solarRadiation.avg.getValue,
+			powerPv: this.members.powerPv.avg.getValue,
+			powerBalance: this.members.powerBalance.avg.getValue,
+			powerGrid: this.members.powerGrid.avg.getValue,
+			powerBattery: this.members.powerBattery.avg.getValue,
 		};
+	}
 
+	public get avg5(): AverageValueGroupMemberValues {
+		return {
+			solarRadiation: this.members.solarRadiation.avg5.getValue,
+			powerPv: this.members.powerPv.avg5.getValue,
+			powerBalance: this.members.powerBalance.avg5.getValue,
+			powerGrid: this.members.powerGrid.avg5.getValue,
+			powerBattery: this.members.powerBattery.avg5.getValue,
+		};
+	}
+
+	public get current(): AverageValueGroupMemberValues {
+		return {
+			solarRadiation: this.members.solarRadiation.current.getValue,
+			powerPv: this.members.powerPv.current.getValue,
+			powerBalance: this.members.powerBalance.current.getValue,
+			powerGrid: this.members.powerGrid.current.getValue,
+			powerBattery: this.members.powerBattery.current.getValue,
+		};
 	}
 
 	static async build(adapter: AdapterInstance): Promise<PowerRepository> {
