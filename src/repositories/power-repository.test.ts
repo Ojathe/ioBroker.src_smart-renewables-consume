@@ -2,8 +2,8 @@ import { AdapterInstance } from '@iobroker/adapter-core';
 import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { AverageValue } from './average-value';
-import { AverageValueGroup, AverageValueGroupMembers } from './average-value-group';
+import { AverageValue } from '../values/average-value';
+import { AverageValueGroupMembers, PowerRepository } from './power-repository';
 import { EXTERNAL_STATE_LANDINGZONE } from '../handler/dp-handler';
 import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
 
@@ -19,7 +19,7 @@ export async function createMockedLandingZone(adapter: MockAdapter) {
 	await createObjectBool(adapter as unknown as AdapterInstance, EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING, false);
 }
 
-describe('AverageValueGroup', () => {
+describe('power-repository', () => {
 	const currentTestCaseSolutions: Array<CurrentTestSolution<any>> = [
 		createCurrentTestCase({
 			function: 'powerBalance',
@@ -116,7 +116,7 @@ describe('AverageValueGroup', () => {
 
 	const initHandler = async () => {
 		await createMockedLandingZone(adapter);
-		return await AverageValueGroup.build(adapter as unknown as AdapterInstance);
+		return await PowerRepository.build(adapter as unknown as AdapterInstance);
 	};
 
 	const stateMap: Map<AggregatFunction, [string, object | undefined]> = new Map([

@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValueGroup } from '../values/average-value-group';
+import { PowerRepository } from '../repositories/power-repository';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
 import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 
@@ -15,7 +15,7 @@ export class AnalyzerBonus {
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
 
-	constructor(private adapter: AdapterInstance, private avgValues: AverageValueGroup) {
+	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository) {
 	}
 
 	public async run(): Promise<void> {
@@ -25,9 +25,9 @@ export class AnalyzerBonus {
 		let powerBonus = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDif = await this.avgValues.values.current.powerBalance();
-		const powerDifAvg = await this.avgValues.values.avg.powerBalance();
-		const gridPowerAvg = await this.avgValues.values.avg.powerGrid();
+		const powerDif = await this.powerRepo.values.current.powerBalance();
+		const powerDifAvg = await this.powerRepo.values.avg.powerBalance();
+		const gridPowerAvg = await this.powerRepo.values.avg.powerGrid();
 
 		const batSoc = (await getStateAsNumber(this.adapter, EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) ?? 0;
 

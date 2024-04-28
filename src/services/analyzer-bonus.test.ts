@@ -3,9 +3,9 @@ import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerBonus } from './analyzer-bonus';
-import { AverageValueGroup } from '../values/average-value-group';
+import { PowerRepository } from '../repositories/power-repository';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
-import { createMockedLandingZone } from '../values/average-value-group.test';
+import { createMockedLandingZone } from '../repositories/power-repository.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -30,13 +30,13 @@ describe('analyzer-bonus', () => {
 			props: { powerDifCurrent: number; powerDifAvg: number; powerGridAvg: number } = defaultProps,
 		) => {
 			await createMockedLandingZone(adapter);
-			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
-			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, handler);
+			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
+			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, powerRepo);
 
-			adapter.setState(handler.members.powerBalance.current.xid, props.powerDifCurrent);
-			adapter.setState(handler.members.powerBalance.avg.xid, props.powerDifAvg);
-			adapter.setState(handler.members.powerGrid.avg.xid, props.powerGridAvg);
-			return { handler, analyzer };
+			adapter.setState(powerRepo.members.powerBalance.current.xid, props.powerDifCurrent);
+			adapter.setState(powerRepo.members.powerBalance.avg.xid, props.powerDifAvg);
+			adapter.setState(powerRepo.members.powerGrid.avg.xid, props.powerGridAvg);
+			return { powerRepo, analyzer };
 		};
 
 		[EXTERNAL_STATE_LANDINGZONE.BAT_SOC, INTERNAL_STATE_EEG.BONUS].forEach((testCase) => {

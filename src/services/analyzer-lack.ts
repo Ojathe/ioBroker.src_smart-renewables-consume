@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValueGroup } from '../values/average-value-group';
+import { PowerRepository } from '../repositories/power-repository';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
 
 export class AnalyzerLack {
@@ -7,7 +7,7 @@ export class AnalyzerLack {
 	public static readonly lackReportingThreshold = -0.5;
 	public static readonly gridBuyingThreshold = -0.2;
 
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueGroup) {
+	constructor(private adapter: AdapterInstance, private powerRepo: PowerRepository) {
 	}
 
 	public async run(): Promise<void> {
@@ -20,8 +20,8 @@ export class AnalyzerLack {
 		let powerLack = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDifAvg5 = await this.avgValueHandler.values.avg5.powerBalance();
-		const gridPowerAvg5 = await this.avgValueHandler.values.avg5.powerGrid();
+		const powerDifAvg5 = await this.powerRepo.values.avg5.powerBalance();
+		const gridPowerAvg5 = await this.powerRepo.values.avg5.powerGrid();
 		const batSoc = ((await this.adapter.getStateAsync(EXTERNAL_STATE_LANDINGZONE.BAT_SOC))?.val as number) ?? 0;
 
 		// TODO PV Connection

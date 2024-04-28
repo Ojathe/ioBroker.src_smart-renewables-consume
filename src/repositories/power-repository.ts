@@ -1,5 +1,5 @@
 import { AdapterInstance } from '@iobroker/adapter-core';
-import { AverageValue } from './average-value';
+import { AverageValue } from '../values/average-value';
 import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 import { EXTERNAL_STATE_LANDINGZONE } from '../handler/dp-handler';
 import { round } from '../util/math';
@@ -24,7 +24,7 @@ export type AverageValueGroupMemberValues = {
 // 	powerBattery: () => Promise<number>
 // }
 
-export class AverageValueGroup {
+export class PowerRepository {
 	private solarRadiation: AverageValue | undefined;
 	private powerBalance: AverageValue | undefined;
 	private powerBattery: AverageValue | undefined;
@@ -81,8 +81,8 @@ export class AverageValueGroup {
 
 	}
 
-	static async build(adapter: AdapterInstance): Promise<AverageValueGroup> {
-		const val = new AverageValueGroup(adapter);
+	static async build(adapter: AdapterInstance): Promise<PowerRepository> {
+		const val = new PowerRepository(adapter);
 
 		val.solarRadiation = await AverageValue.build(adapter, 'solar-radiation', {
 			desc: 'Average solar radiation',

@@ -3,9 +3,9 @@ import { utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AnalyzerLack } from './analyzer-lack';
-import { AverageValueGroup } from '../values/average-value-group';
+import { PowerRepository } from '../repositories/power-repository';
 import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-handler';
-import { createMockedLandingZone } from '../values/average-value-group.test';
+import { createMockedLandingZone } from '../repositories/power-repository.test';
 
 const { adapter, database } = utils.unit.createMocks({});
 
@@ -35,13 +35,13 @@ describe('analyzer-lack', () => {
 			} = defaultProps,
 		) => {
 			await createMockedLandingZone(adapter);
-			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
-			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, handler);
+			const powerRepo = await PowerRepository.build(adapter as unknown as AdapterInstance);
+			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, powerRepo);
 
-			adapter.setState(handler.members.powerBalance.avg5.xid, props.powerDifAvg5);
-			adapter.setState(handler.members.powerGrid.avg5.xid, props.powerGridAvg5);
+			adapter.setState(powerRepo.members.powerBalance.avg5.xid, props.powerDifAvg5);
+			adapter.setState(powerRepo.members.powerGrid.avg5.xid, props.powerGridAvg5);
 			adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, props.batSoc);
-			return { handler, analyzer };
+			return { powerRepo, analyzer };
 		};
 
 		[EXTERNAL_STATE_LANDINGZONE.BAT_SOC, INTERNAL_STATE_EEG.LOSS].forEach((testCase) => {

@@ -9,7 +9,7 @@ import * as utils from '@iobroker/adapter-core';
 import { scheduleJob } from 'node-schedule';
 import { AnalyzerLack } from './services/analyzer-lack';
 import { AnalyzerBonus } from './services/analyzer-bonus';
-import { AverageValueGroup } from './values/average-value-group';
+import { PowerRepository } from './repositories/power-repository';
 import { addSubscriptions, createObjects, EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from './handler/dp-handler';
 import { setStateAsBoolean } from './util/state-util';
 
@@ -17,7 +17,7 @@ import { setStateAsBoolean } from './util/state-util';
 // import * as fs from "fs";
 
 class SrcSmartRenewablesConsume extends utils.Adapter {
-	private avgValueHandler: AverageValueGroup | undefined;
+	private powerRepo: PowerRepository | undefined;
 	private analyzerBonus: AnalyzerBonus | undefined;
 	private analyzerLack: AnalyzerLack | undefined;
 
@@ -65,15 +65,15 @@ class SrcSmartRenewablesConsume extends utils.Adapter {
 			await this.updateIngoingValue(externalId);
 		}
 
-		this.avgValueHandler = await AverageValueGroup.build(this);
-		this.analyzerBonus = new AnalyzerBonus(this, this.avgValueHandler);
-		this.analyzerLack = new AnalyzerLack(this, this.avgValueHandler);
+		this.powerRepo = await PowerRepository.build(this);
+		this.analyzerBonus = new AnalyzerBonus(this, this.powerRepo);
+		this.analyzerLack = new AnalyzerLack(this, this.powerRepo);
 
 		// calculating average Values
 		// TODO make interval configurable
 		scheduleJob('*/20 * * * * *', () => {
 			console.debug('calculating average Values');
-			this.avgValueHandler!.calculate();
+			this.powerRepo!.calculate();
 		});
 
 		scheduleJob('*/30 * * * * *', () => {
