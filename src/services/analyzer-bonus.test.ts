@@ -33,9 +33,9 @@ describe('analyzer-bonus', () => {
 			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerBonus(adapter as unknown as AdapterInstance, handler);
 
-			adapter.setState(handler.powerDif.current.xid, props.powerDifCurrent);
-			adapter.setState(handler.powerDif.avg.xid, props.powerDifAvg);
-			adapter.setState(handler.powerGrid.avg.xid, props.powerGridAvg);
+			adapter.setState(handler.members.powerBalance.current.xid, props.powerDifCurrent);
+			adapter.setState(handler.members.powerBalance.avg.xid, props.powerDifAvg);
+			adapter.setState(handler.members.powerGrid.avg.xid, props.powerGridAvg);
 			return { handler, analyzer };
 		};
 

@@ -3,7 +3,7 @@ import { MockAdapter, utils } from '@iobroker/testing';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { AverageValue } from './average-value';
-import { AverageValueGroup } from './average-value-group';
+import { AverageValueGroup, AverageValueGroupMembers } from './average-value-group';
 import { EXTERNAL_STATE_LANDINGZONE } from '../handler/dp-handler';
 import { createObjectBool, createObjectNum } from '../util/create-objects-helper';
 
@@ -22,7 +22,7 @@ export async function createMockedLandingZone(adapter: MockAdapter) {
 describe('AverageValueGroup', () => {
 	const currentTestCaseSolutions: Array<CurrentTestSolution<any>> = [
 		createCurrentTestCase({
-			function: 'powerDif',
+			function: 'powerBalance',
 			testCases: [
 				{
 					expectation: 1,
@@ -90,7 +90,7 @@ describe('AverageValueGroup', () => {
 			],
 		}),
 		createCurrentTestCase({
-			function: 'solar',
+			function: 'solarRadiation',
 			testCases: [
 				{
 					expectation: 0,
@@ -121,7 +121,7 @@ describe('AverageValueGroup', () => {
 
 	const stateMap: Map<AggregatFunction, [string, object | undefined]> = new Map([
 		[
-			'solar',
+			'solarRadiation',
 			[
 				'solar-radiation',
 				{
@@ -143,7 +143,7 @@ describe('AverageValueGroup', () => {
 			],
 		],
 		[
-			'batLoad',
+			'powerBattery',
 			[
 				'bat-load',
 				{
@@ -153,7 +153,7 @@ describe('AverageValueGroup', () => {
 				},
 			],
 		],
-		['powerDif', ['power-dif', undefined]],
+		['powerBalance', ['power-dif', undefined]],
 		['powerGrid', ['power-grid', undefined]],
 	]);
 	for (const testSolution of currentTestCaseSolutions) {
@@ -184,7 +184,7 @@ describe('AverageValueGroup', () => {
 							await adapter.setStateAsync(state.xid, state.value);
 						}
 						await handler.calculate();
-						expect(await handler[testSolution.function].current.getValue()).to.eq(currentCase.expectation);
+						expect(await handler.members[testSolution.function].current.getValue()).to.eq(currentCase.expectation);
 					});
 				}
 			});
@@ -192,7 +192,7 @@ describe('AverageValueGroup', () => {
 	}
 });
 
-type AggregatFunction = keyof AverageValueGroup & ('powerDif' | 'powerGrid' | 'powerPv' | 'solar' | 'batLoad');
+type AggregatFunction = keyof AverageValueGroupMembers;
 
 type CurrentTestSolutionTemplate<T> = {
 	function: AggregatFunction;

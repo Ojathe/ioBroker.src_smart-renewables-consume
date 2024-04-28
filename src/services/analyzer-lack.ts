@@ -20,8 +20,8 @@ export class AnalyzerLack {
 		let powerLack = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDifAvg5 = await this.avgValueHandler.powerDif.avg5.getValue();
-		const gridPowerAvg5 = await this.avgValueHandler.powerGrid.avg5.getValue();
+		const powerDifAvg5 = await this.avgValueHandler.values.avg5.powerBalance();
+		const gridPowerAvg5 = await this.avgValueHandler.values.avg5.powerGrid();
 		const batSoc = ((await this.adapter.getStateAsync(EXTERNAL_STATE_LANDINGZONE.BAT_SOC))?.val as number) ?? 0;
 
 		// TODO PV Connection

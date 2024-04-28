@@ -14,6 +14,9 @@ export class XId<T extends ioBroker.StateValue> {
 		private readonly adapter: AdapterInstance,
 		private readonly isManaged: boolean = false,
 	) {
+		if (adapter === undefined) {
+			throw new Error('adapter has to be defined!');
+		}
 	}
 
 	static async asManagedBase<T extends ioBroker.StateValue>(
@@ -57,7 +60,7 @@ export class XId<T extends ioBroker.StateValue> {
 		return new XId(xid, adapter);
 	}
 
-	public async getValue(): Promise<T> {
+	public getValue = async (): Promise<T> => {
 		const val = (await this.adapter.getStateAsync(this.xid))?.val;
 
 		if (val === undefined) {
@@ -65,7 +68,7 @@ export class XId<T extends ioBroker.StateValue> {
 		}
 
 		return val as T;
-	}
+	};
 
 	public async setValue(value: T): ioBroker.SetStatePromise {
 		if (!this.isManaged) {

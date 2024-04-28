@@ -141,12 +141,12 @@ export class AverageValue {
 				},
 			});
 
-			const values = (result as unknown as any).result as { val: number; ts: number }[];
+			const values = (result as unknown as any)?.result ?? [] as { val: number; ts: number }[];
 
 			await this.calculateAvgValue(values, this.avg.xid);
 			await this.calculateAvgValue(values, this.avg5.xid, start5Min);
 		} catch (error) {
-			console.error(`calculateAvgValue(${await this.current.getValue()}) # ${error}`);
+			console.error(`calculateAvgValue(${this.current.xid}) # ${error}`);
 		}
 	}
 

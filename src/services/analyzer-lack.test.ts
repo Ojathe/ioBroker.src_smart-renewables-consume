@@ -38,8 +38,8 @@ describe('analyzer-lack', () => {
 			const handler = await AverageValueGroup.build(adapter as unknown as AdapterInstance);
 			const analyzer = new AnalyzerLack(adapter as unknown as AdapterInstance, handler);
 
-			adapter.setState(handler.powerDif.avg5.xid, props.powerDifAvg5);
-			adapter.setState(handler.powerGrid.avg5.xid, props.powerGridAvg5);
+			adapter.setState(handler.members.powerBalance.avg5.xid, props.powerDifAvg5);
+			adapter.setState(handler.members.powerGrid.avg5.xid, props.powerGridAvg5);
 			adapter.setState(EXTERNAL_STATE_LANDINGZONE.BAT_SOC, props.batSoc);
 			return { handler, analyzer };
 		};

@@ -4,7 +4,9 @@ import { EXTERNAL_STATE_LANDINGZONE, INTERNAL_STATE_EEG } from '../handler/dp-ha
 import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 
 export interface AnalyzerBonusProps {
-
+	getSellingThreshold: () => number;
+	getBonusReportThreshold: () => number;
+	getBatChargeMinimum: () => number;
 }
 
 export class AnalyzerBonus {
@@ -13,7 +15,7 @@ export class AnalyzerBonus {
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
 
-	constructor(private adapter: AdapterInstance, private avgValueHandler: AverageValueGroup) {
+	constructor(private adapter: AdapterInstance, private avgValues: AverageValueGroup) {
 	}
 
 	public async run(): Promise<void> {
@@ -23,9 +25,9 @@ export class AnalyzerBonus {
 		let powerBonus = false;
 
 		// Energy, missing (<0) oder additionally (>0) related to the household load
-		const powerDif = await this.avgValueHandler.powerDif.current.getValue();
-		const powerDifAvg = await this.avgValueHandler.powerDif.avg.getValue();
-		const gridPowerAvg = await this.avgValueHandler.powerGrid.avg.getValue();
+		const powerDif = await this.avgValues.values.current.powerBalance();
+		const powerDifAvg = await this.avgValues.values.avg.powerBalance();
+		const gridPowerAvg = await this.avgValues.values.avg.powerGrid();
 
 		const batSoc = (await getStateAsNumber(this.adapter, EXTERNAL_STATE_LANDINGZONE.BAT_SOC)) ?? 0;
 
