@@ -1,6 +1,7 @@
 import { PowerRepository } from '../repositories/power-repository';
 import { LandingZoneRepository } from '../repositories/landing-zone-repository';
 import { EegRepository } from '../repositories/eeg-repository';
+import { sortBy } from '../util/array-helper';
 
 export interface AnalyzerBonusProps {
 	getSellingThreshold: () => number;
@@ -13,6 +14,14 @@ export class AnalyzerBonus {
 	public static readonly sellingThreshold: number = 0.2;
 	public static readonly bonusReportThreshold: number = 0.1;
 	public static readonly batChargeMinimum: number = 10;
+
+	private batChargeThresholds: { threshold: number, chargeLoadSaving: number }[] = [
+		{ threshold: 0, chargeLoadSaving: 3.5 },
+		{ threshold: 20, chargeLoadSaving: 2.5 },
+		{ threshold: 50, chargeLoadSaving: 1.5 },
+		{ threshold: 75, chargeLoadSaving: 1 },
+		{ threshold: 85, chargeLoadSaving: 0 },
+	];
 
 	constructor(private powerRepo: PowerRepository, private landingZoneRepo: LandingZoneRepository, private eegRepo: EegRepository) {
 	}
@@ -30,8 +39,11 @@ export class AnalyzerBonus {
 
 		const batSoC = await this.landingZoneRepo.batterySoC.getValue();
 
-		// bonus when positive power balance
-		if (gridPowerAvg > AnalyzerBonus.sellingThreshold) {
+		const powerBalanceInternal = gridPowerAvg - this.getBatterySaving(batSoC);
+		await this.powerRepo.powerBalanceInternal.setValue(powerBalanceInternal);
+
+		// bonus when positive internal power balance
+		if (powerBalanceInternal > AnalyzerBonus.sellingThreshold) {
 			powerBonus = true;
 		}
 
@@ -62,4 +74,23 @@ export class AnalyzerBonus {
 		// Update the state
 		await this.eegRepo.bonus.setValue(powerBonus);
 	}
+
+	public getBatterySaving = (batSoc: number): number => {
+		if (batSoc == 0) {
+			return sortBy(this.batChargeThresholds, 'asc', (obj) => obj.threshold)[0].chargeLoadSaving;
+		}
+
+		const thresholdDef = [...this.batChargeThresholds].filter((obj) => {
+			return obj.threshold < batSoc;
+		}).pop();
+
+		if (thresholdDef === undefined) {
+			console.error(`Power Repository # ERROR Es konnte keine Grenzwertdefinition gefunden werden.`);
+			return 0;
+		}
+
+		return thresholdDef.chargeLoadSaving;
+	};
+
+
 }

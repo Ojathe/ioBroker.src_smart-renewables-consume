@@ -1,7 +1,15 @@
 import { EnergyFlowManager } from '../services/energy-flow-manager';
 
-export interface Device {
+export enum Status {
+	MANUAL = 'MANUAL',
+	STARTED = 'STARTED',
+	STOPPED = 'STOPPED',
+	FORCED = 'FORCED',
+	LOCKED = 'LOCKED',
+}
 
+export interface Device {
+	key: string,
 }
 
 export interface AutomatedDevice extends Device {
@@ -11,6 +19,6 @@ export interface AutomatedDevice extends Device {
 	stop: () => Promise<void>,
 	forceStartNeeded: (efw: EnergyFlowManager) => Promise<boolean>,
 	forceStopNeeded: (efw: EnergyFlowManager) => Promise<boolean>,
-	automationSwitch: Promise<boolean>,
+	status: Status,
 	allowedBatteryConsumption: number
 }

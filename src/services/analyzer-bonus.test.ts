@@ -114,6 +114,7 @@ describe('analyzer-bonus', () => {
 				});
 			});
 		});
+		//TODO assert PowerBalance internal
 
 		describe('detects bonus ', () => {
 			[
@@ -124,8 +125,8 @@ describe('analyzer-bonus', () => {
 				},
 				{
 					name: 'when positive powerGrid ',
-					props: { ...defaultProps, powerDifCurrent: 1, powerGridAvg: 1 },
-					bat: 30,
+					props: { ...defaultProps, powerDifCurrent: 2, powerGridAvg: 2 },
+					bat: 85,
 				},
 			].forEach((testCase) => {
 				it(`when  '${testCase.name}' setting: ${testCase.props.powerDifCurrent}kW cur,${testCase.props.powerDifAvg}kW avg,${testCase.props.powerGridAvg}kW grid, ${testCase.bat}% bat`, async () => {
@@ -140,11 +141,9 @@ describe('analyzer-bonus', () => {
 
 					// assert
 					// update bonus state itself
-					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.BONUS, true);
 					asserts.assertStateHasValue(INTERNAL_STATE_EEG.BONUS, true);
 
 					// update battery stand of charge
-					expect(adapter.setStateAsync).to.be.calledWith(INTERNAL_STATE_EEG.SOC_LAST_BONUS, testCase.bat);
 					asserts.assertStateHasValue(INTERNAL_STATE_EEG.SOC_LAST_BONUS, testCase.bat);
 				});
 			});
