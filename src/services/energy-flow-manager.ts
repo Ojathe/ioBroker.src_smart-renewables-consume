@@ -1,8 +1,8 @@
-import { PowerRepository } from '../repositories/power-repository';
-import { LandingZoneRepository } from '../repositories/landing-zone-repository';
-import { EegRepository } from '../repositories/eeg-repository';
-import { HeatingRepository } from '../repositories/heating-repository';
-import { AutomatedDevice } from '../devices/device';
+import {PowerRepository} from '../repositories/power-repository';
+import {LandingZoneRepository} from '../repositories/landing-zone-repository';
+import {EegRepository} from '../repositories/eeg-repository';
+import {HeatingRepository} from '../repositories/heating-repository';
+import {AutomatedDevice, Status} from '../devices/device';
 
 export enum DeviceAction {
 	STARTED = 'STARTED',
@@ -35,15 +35,27 @@ export class EnergyFlowManager {
 			return [];
 		}
 
-		return this.adjust(loss ? 'decrement' : 'increment', await this.powerRepo.powerBalanceInternal.getValue());
+		const direction = loss ? 'decrement' : 'increment';
+		const amountOfUnbalance = await this.powerRepo.powerBalanceInternal.getValue();
+		return await this.adjust(direction, amountOfUnbalance);
 
 	};
 
-	private adjust = (direction: 'increment' | 'decrement', amount: number): Array<EnergyFlowManagerAdjustment> => {
+	private adjust = async (direction: 'increment' | 'decrement', amount: number): Promise<Array<EnergyFlowManagerAdjustment>> => {
 
 		console.log(`adjust(): ${direction} (balance: ${amount} kW)`);
 		if (direction === 'decrement') {
-			return [];
+			if (this.automatedDevices.length === 0) {
+				return [];
+			}
+
+			const deviceCandidates = this.automatedDevices
+				.filter((device) => (device.status === Status.STARTED))
+				.sort((a, b) => a.priority <= b.priority ? 1 : -1);
+			const deviceToStop = deviceCandidates[0];
+			await deviceToStop.stop();
+
+			return [{automatedDevice: deviceToStop, action: DeviceAction.STOPPED}];
 		}
 
 		throw new Error('Not Implemented');
