@@ -1,15 +1,16 @@
-import { AutomatedDevice, Status } from '../../devices/device';
+import { Status } from '../../devices/device';
 import { EnergyFlowManager } from '../energy-flow-manager';
+import { AbstractAutomatedDevice } from '../../devices/abstract-automated-device';
 
 export interface MockedAutomatedDeviceProps {
 	key: string,
-	estimatedConsumption?: number,
+	estimatedConsumption: number,
 	priority?: number,
 	allowedBatteryConsumption?: number;
 	status?: Status;
 }
 
-export class MockedAutomatedDevice implements AutomatedDevice {
+export class MockedAutomatedDevice extends AbstractAutomatedDevice {
 
 	readonly priority: number;
 	readonly estimatedConsumption: Promise<number>;
@@ -22,6 +23,7 @@ export class MockedAutomatedDevice implements AutomatedDevice {
 	readonly key: string;
 
 	constructor(sandbox: sinon.SinonSandbox, props: MockedAutomatedDeviceProps) {
+		super();
 		this.start = sandbox.stub();
 		this.stop = sandbox.stub();
 		this.forceStartNeeded = sandbox.stub();

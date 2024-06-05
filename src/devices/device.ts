@@ -21,4 +21,8 @@ export interface AutomatedDevice extends Device {
 	forceStopNeeded: (efw: EnergyFlowManager) => Promise<boolean>,
 	status: Status,
 	allowedBatteryConsumption: number
+
+	isAllowedToConsumeBattery(batteryStatus: {
+		batteryBalanceSinceBonus: number;
+	}): boolean;
 }

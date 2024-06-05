@@ -1,14 +1,14 @@
-import {MockAdapter, utils} from '@iobroker/testing';
-import {LandingZoneRepoImpl} from '../repositories/landing-zone-repository';
-import {AdapterInstance} from '@iobroker/adapter-core';
-import {EegRepositoryImpl} from '../repositories/eeg-repository';
-import {HeatingRepository} from '../repositories/heating-repository';
-import {DeviceAction, EnergyFlowManager} from './energy-flow-manager';
-import {PowerRepository} from '../repositories/power-repository';
-import {AutomatedDevice, Status} from '../devices/device';
-import {expect} from 'chai';
+import { MockAdapter, utils } from '@iobroker/testing';
+import { LandingZoneRepoImpl } from '../repositories/landing-zone-repository';
+import { AdapterInstance } from '@iobroker/adapter-core';
+import { EegRepositoryImpl } from '../repositories/eeg-repository';
+import { HeatingRepository } from '../repositories/heating-repository';
+import { DeviceAction, EnergyFlowManager } from './energy-flow-manager';
+import { PowerRepository } from '../repositories/power-repository';
+import { AutomatedDevice, Status } from '../devices/device';
+import { expect } from 'chai';
 import sinon from 'sinon';
-import {MockedAutomatedDevice} from './test-utils/mocked-automated-device';
+import { MockedAutomatedDevice } from './test-utils/mocked-automated-device';
 
 interface setupProps {
 	operating?: boolean,
@@ -16,7 +16,7 @@ interface setupProps {
 	bonus?: boolean
 }
 
-const {adapter, database} = utils.unit.createMocks({});
+const { adapter, database } = utils.unit.createMocks({});
 
 describe('EnergyFlowManager', () => {
 	const sandbox = sinon.createSandbox();
@@ -40,14 +40,14 @@ describe('EnergyFlowManager', () => {
 
 		const efm = new EnergyFlowManager(powerRepo, landingZoneRepo, eegRepo, heatingRepository, automatedDevices);
 
-		return {efm, powerRepo, landingZoneRepo, eegRepo, heatingRepository};
+		return { efm, powerRepo, landingZoneRepo, eegRepo, heatingRepository };
 	};
 
 	describe('run', () => {
 
 		it('operation mode is disabled _ returns false', async () => {
-			const props = {operating: false};
-			const {efm} = await setup(adapter, props);
+			const props = { operating: false };
+			const { efm } = await setup(adapter, props);
 
 			const result = await efm.run();
 
@@ -56,9 +56,9 @@ describe('EnergyFlowManager', () => {
 		});
 
 		it('neither loss nor bonus _ returns false', async () => {
-			const props = {loss: false, bonus: false};
+			const props = { loss: false, bonus: false };
 
-			const {efm} = await setup(adapter, props);
+			const { efm } = await setup(adapter, props);
 
 			const result = await efm.run();
 
@@ -67,10 +67,10 @@ describe('EnergyFlowManager', () => {
 		});
 
 		describe('loss is detected', () => {
-			const props = {loss: true, bonus: false};
+			const props = { loss: true, bonus: false };
 
 			it('_  no automated devices exists _  returns empty array', async () => {
-				const {efm, powerRepo} = await setup(adapter, props);
+				const { efm, powerRepo } = await setup(adapter, props);
 
 
 				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
@@ -84,6 +84,7 @@ describe('EnergyFlowManager', () => {
 				const aMockedDevice = new MockedAutomatedDevice(sandbox, {
 					key: 'aAutomatedDevice',
 					status: Status.STARTED,
+					estimatedConsumption: 0.5,
 				});
 
 				const {
@@ -95,7 +96,7 @@ describe('EnergyFlowManager', () => {
 
 				const result = await efm.run();
 
-				expect(result).to.eql([{automatedDevice: aMockedDevice, action: DeviceAction.STOPPED}]);
+				expect(result).to.eql([{ automatedDevice: aMockedDevice, action: DeviceAction.STOPPED }]);
 				expect(aMockedDevice.stop).to.have.been.called;
 			});
 
@@ -104,11 +105,13 @@ describe('EnergyFlowManager', () => {
 					const aMockedDeviceRunning = new MockedAutomatedDevice(sandbox, {
 						key: 'aAutomatedDevice',
 						status: Status.STARTED,
+						estimatedConsumption: 0.1,
 					});
 
 					const aMockedDeviceToIgnore = new MockedAutomatedDevice(sandbox, {
 						key: 'anotherAutomatedDevice',
 						status,
+						estimatedConsumption: 0.1,
 					});
 
 					const {
@@ -121,7 +124,7 @@ describe('EnergyFlowManager', () => {
 					const result = await efm.run();
 
 					expect(aMockedDeviceToIgnore.stop).not.to.have.been.called;
-					expect(result).to.eql([{automatedDevice: aMockedDeviceRunning, action: DeviceAction.STOPPED}]);
+					expect(result).to.eql([{ automatedDevice: aMockedDeviceRunning, action: DeviceAction.STOPPED }]);
 					expect(aMockedDeviceRunning.stop).to.have.been.called;
 				});
 			}
@@ -131,13 +134,15 @@ describe('EnergyFlowManager', () => {
 				const aMockedDeviceHighPrio = new MockedAutomatedDevice(sandbox, {
 					key: 'aMockedDeviceHighPrio',
 					status: Status.STARTED,
-					priority: 1
+					priority: 1,
+					estimatedConsumption: 0.5,
 				});
 
 				const aMockedDeviceHighPrioLowPrio = new MockedAutomatedDevice(sandbox, {
 					key: 'aMockedDeviceHighPrioLowPrio',
 					status: Status.STARTED,
-					priority: 3
+					priority: 3,
+					estimatedConsumption: 0.5,
 				});
 
 				const {
@@ -150,7 +155,7 @@ describe('EnergyFlowManager', () => {
 				const result = await efm.run();
 
 				expect(aMockedDeviceHighPrio.stop).not.to.have.been.called;
-				expect(result).to.eql([{automatedDevice: aMockedDeviceHighPrioLowPrio, action: DeviceAction.STOPPED}]);
+				expect(result).to.eql([{ automatedDevice: aMockedDeviceHighPrioLowPrio, action: DeviceAction.STOPPED }]);
 				expect(aMockedDeviceHighPrioLowPrio.stop).to.have.been.called;
 			});
 
@@ -159,21 +164,21 @@ describe('EnergyFlowManager', () => {
 					key: 'aMockedDeviceHighPrio',
 					status: Status.STARTED,
 					priority: 1,
-					estimatedConsumption: 0.6
+					estimatedConsumption: 0.6,
 				});
 
 				const aMockedDeviceLowPrio1 = new MockedAutomatedDevice(sandbox, {
 					key: 'aMockedDeviceLowPrio1',
 					status: Status.STARTED,
 					priority: 2,
-					estimatedConsumption: 0.2
+					estimatedConsumption: 0.2,
 				});
 
 				const aMockedDeviceLowPrio2 = new MockedAutomatedDevice(sandbox, {
 					key: 'aMockedDeviceLowPrio2',
 					status: Status.STARTED,
 					priority: 2,
-					estimatedConsumption: 0.3
+					estimatedConsumption: 0.3,
 				});
 
 				const {
@@ -187,12 +192,38 @@ describe('EnergyFlowManager', () => {
 
 				expect(aMockedDeviceHighPrio.stop).not.to.have.been.called;
 				expect(result).to.eql([
-					{automatedDevice: aMockedDeviceLowPrio1, action: DeviceAction.STOPPED},
-					{automatedDevice: aMockedDeviceLowPrio2, action: DeviceAction.STOPPED}
+					{ automatedDevice: aMockedDeviceLowPrio1, action: DeviceAction.STOPPED },
+					{ automatedDevice: aMockedDeviceLowPrio2, action: DeviceAction.STOPPED },
 				]);
 				expect(aMockedDeviceLowPrio1.stop).to.have.been.called;
 				expect(aMockedDeviceLowPrio2.stop).to.have.been.called;
 
+			});
+
+			it('_ dont stop devices which are allowed to consume battery when consume is in range', async () => {
+				const aMockedDevice = new MockedAutomatedDevice(sandbox, {
+					key: 'aMockedDevice',
+					status: Status.STARTED,
+					priority: 2,
+					estimatedConsumption: 0.2,
+					allowedBatteryConsumption: 10,
+				});
+
+				const {
+					efm,
+					eegRepo,
+					powerRepo,
+					landingZoneRepo,
+				} = await setup(adapter, props, [aMockedDevice]);
+
+				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
+				await adapter.setStateAsync(eegRepo.socLastBonus.xid, 80);
+				await adapter.setStateAsync(landingZoneRepo.batterySoC.xid, 70);
+
+				const result = await efm.run();
+
+				expect(aMockedDevice.stop).not.to.be.called;
+				expect(result).to.be.empty;
 			});
 		});
 	});
