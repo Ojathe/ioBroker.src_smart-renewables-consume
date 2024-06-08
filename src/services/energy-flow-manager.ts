@@ -35,20 +35,24 @@ export class EnergyFlowManager {
 			return [];
 		}
 
-		const direction = loss ? 'decrement' : 'increment';
 		const amountOfUnbalance = await this.powerRepo.powerBalanceInternal.getValue();
 
-		return await this.adjust(direction, amountOfUnbalance);
-	};
-
-	private adjust = async (direction: 'increment' | 'decrement', amount: number): Promise<Array<EnergyFlowManagerAdjustment>> => {
-
-		console.log(`adjust(): ${direction} (balance: ${amount} kW)`);
-		if (direction === 'decrement') {
-			return await this.reduceLoad(amount);
+		if (loss) {
+			if (amountOfUnbalance < 0) {
+				return await this.reduceLoad(amountOfUnbalance);
+			}
+			console.error('Unexpected State. Loss detected but amountOfUnbalance is positive!?');
 		}
 
-		throw new Error('Not Implemented');
+		if (bonus) {
+			if (amountOfUnbalance > 0) {
+				// TODO use average value for bonus
+				return await this.increaseLoad(...);
+			}
+			console.error('Unexpected State. Bonus detected but amountOfUnbalance is negative!?');
+		}
+
+		return [];
 	};
 
 	private async reduceLoad(amount: number): Promise<Array<EnergyFlowManagerAdjustment>> {
@@ -91,5 +95,25 @@ export class EnergyFlowManager {
 		return this.automatedDevices
 			.filter((device) => (device.status === Status.STARTED))
 			.sort((a, b) => a.priority <= b.priority ? 1 : -1);
+	}
+
+
+	private async increaseLoad(amountOfUnbalance: number): Promise<Array<EnergyFlowManagerAdjustment>> {
+		const candidates = this.getOrderedCandidatesToStart();
+
+		if (candidates.length === 0) {
+			return [];
+		}
+
+		candidates[0].start();
+		return [{ automatedDevice: candidates[0], action: DeviceAction.STARTED }];
+
+		throw new Error('Not Implemented');
+	}
+
+	private getOrderedCandidatesToStart() {
+		return this.automatedDevices
+			.filter((device) => (device.status === Status.STOPPED))
+			.sort((a, b) => a.priority <= b.priority ? -1 : 1);
 	}
 }

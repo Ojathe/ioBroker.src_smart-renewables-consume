@@ -19,7 +19,7 @@ export abstract class AbstractAutomatedDevice implements AutomatedDevice {
 			return false;
 		}
 
-		if (batteryBalanceSinceBonus >= 0) {
+		if (batteryBalanceSinceBonus <= 0) {
 			return true;
 		}
 
