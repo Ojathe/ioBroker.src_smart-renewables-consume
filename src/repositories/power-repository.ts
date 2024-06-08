@@ -3,7 +3,6 @@ import { AverageValue } from '../values/average-value';
 import { getStateAsBoolean, getStateAsNumber } from '../util/state-util';
 import { round } from '../util/math';
 import { EXTERNAL_STATE_LANDINGZONE } from './landing-zone-repository';
-import { XidNumber } from '../values/xid';
 
 export interface AverageValueGroupMembers {
 	solarRadiation: AverageValue,
@@ -25,12 +24,6 @@ export class PowerRepository {
 	private powerGrid: AverageValue | undefined;
 
 	private constructor() {
-	}
-
-	private _powerBalanceInternal: XidNumber | undefined;
-
-	public get powerBalanceInternal(): XidNumber {
-		return this._powerBalanceInternal!;
 	}
 
 	public get members(): AverageValueGroupMembers {
@@ -124,11 +117,6 @@ export class PowerRepository {
 				const isGridBuying = (await getStateAsBoolean(adapter, EXTERNAL_STATE_LANDINGZONE.IS_GRID_BUYING)) ?? true;
 				return round(val * (isGridBuying ? -1 : 1));
 			},
-		});
-
-		val._powerBalanceInternal = await XidNumber.asManaged(adapter, 'power-balance-internal', 0, {
-			unit: 'kWh',
-			desc: 'PowerBalance with reservation to charge battery',
 		});
 
 		// TODO BatteryPower (lg-ess-home.0.user.essinfo.common.BATT.dc_power)

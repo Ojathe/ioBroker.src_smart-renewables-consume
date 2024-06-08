@@ -10,10 +10,12 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { MockedAutomatedDevice } from './test-utils/mocked-automated-device';
 
-interface setupProps {
+interface SetupProps {
 	operating?: boolean,
 	loss?: boolean,
-	bonus?: boolean
+	bonus?: boolean,
+	powerBalanceAvg?: number,
+	powerBalanceCurrent?: number,
 }
 
 const { adapter, database } = utils.unit.createMocks({});
@@ -28,7 +30,7 @@ describe('EnergyFlowManager', () => {
 		sandbox.restore();
 	});
 
-	const setup = async (adapter: MockAdapter, props: setupProps, automatedDevices: Array<AutomatedDevice> = []) => {
+	const setup = async (adapter: MockAdapter, props: SetupProps, automatedDevices: Array<AutomatedDevice> = []) => {
 		const landingZoneRepo = await LandingZoneRepoImpl.create(adapter as unknown as AdapterInstance);
 		const powerRepo = await PowerRepository.create(adapter as unknown as AdapterInstance);
 		const eegRepo = await EegRepositoryImpl.create(adapter as unknown as AdapterInstance);
@@ -37,6 +39,10 @@ describe('EnergyFlowManager', () => {
 		await adapter.setStateAsync(eegRepo.operating.xid, props.operating ?? true);
 		await adapter.setStateAsync(eegRepo.loss.xid, props.loss ?? false);
 		await adapter.setStateAsync(eegRepo.bonus.xid, props.bonus ?? false);
+
+		await adapter.setStateAsync(powerRepo.members.powerBalance.avg.xid, props.powerBalanceAvg ?? 0);
+		await adapter.setStateAsync(powerRepo.members.powerBalance.current.xid, props.powerBalanceCurrent ?? 0);
+
 
 		const efm = new EnergyFlowManager(powerRepo, landingZoneRepo, eegRepo, heatingRepository, automatedDevices);
 
@@ -67,13 +73,11 @@ describe('EnergyFlowManager', () => {
 		});
 
 		describe('loss is detected', () => {
-			const props = { loss: true, bonus: false };
+			const props: SetupProps = { loss: true, bonus: false, powerBalanceCurrent: -0.5 };
 
 			it('_  no automated devices exists _  returns empty array', async () => {
-				const { efm, powerRepo } = await setup(adapter, props);
+				const { efm } = await setup(adapter, props);
 
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
 
 				const result = await efm.run();
 
@@ -87,12 +91,7 @@ describe('EnergyFlowManager', () => {
 					estimatedConsumption: 0.5,
 				});
 
-				const {
-					efm,
-					powerRepo,
-				} = await setup(adapter, props, [aMockedDevice]);
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
+				const { efm } = await setup(adapter, props, [aMockedDevice]);
 
 				const result = await efm.run();
 
@@ -114,12 +113,11 @@ describe('EnergyFlowManager', () => {
 						estimatedConsumption: 0.1,
 					});
 
-					const {
-						efm,
-						powerRepo,
-					} = await setup(adapter, props, [aMockedDeviceToIgnore, aMockedDeviceRunning]);
-
-					await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
+					const { efm } = await setup(
+						adapter,
+						props,
+						[aMockedDeviceToIgnore, aMockedDeviceRunning],
+					);
 
 					const result = await efm.run();
 
@@ -145,12 +143,9 @@ describe('EnergyFlowManager', () => {
 					estimatedConsumption: 0.5,
 				});
 
-				const {
-					efm,
-					powerRepo,
-				} = await setup(adapter, props, [aMockedDeviceHighPrio, aMockedDeviceHighPrioLowPrio]);
+				const { efm } = await setup(
+					adapter, props, [aMockedDeviceHighPrio, aMockedDeviceHighPrioLowPrio]);
 
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
 
 				const result = await efm.run();
 
@@ -183,10 +178,7 @@ describe('EnergyFlowManager', () => {
 
 				const {
 					efm,
-					powerRepo,
 				} = await setup(adapter, props, [aMockedDeviceHighPrio, aMockedDeviceLowPrio1, aMockedDeviceLowPrio2]);
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
 
 				const result = await efm.run();
 
@@ -212,11 +204,9 @@ describe('EnergyFlowManager', () => {
 				const {
 					efm,
 					eegRepo,
-					powerRepo,
 					landingZoneRepo,
 				} = await setup(adapter, props, [aMockedDevice]);
 
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
 				await adapter.setStateAsync(eegRepo.socLastBonus.xid, 80);
 				await adapter.setStateAsync(landingZoneRepo.batterySoC.xid, 70);
 
@@ -238,11 +228,9 @@ describe('EnergyFlowManager', () => {
 				const {
 					efm,
 					eegRepo,
-					powerRepo,
 					landingZoneRepo,
 				} = await setup(adapter, props, [aMockedDevice]);
 
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, -0.5);
 				await adapter.setStateAsync(eegRepo.socLastBonus.xid, 80);
 				await adapter.setStateAsync(landingZoneRepo.batterySoC.xid, 69);
 
@@ -254,12 +242,10 @@ describe('EnergyFlowManager', () => {
 		});
 
 		describe('bonus is detected', () => {
-			const props = { loss: false, bonus: true };
+			const props: SetupProps = { loss: false, bonus: true, powerBalanceAvg: 0.5 };
 
 			it('_  no automated devices exists _  returns empty array', async () => {
-				const { efm, powerRepo } = await setup(adapter, props);
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, 0.5);
+				const { efm } = await setup(adapter, props);
 
 				const result = await efm.run();
 
@@ -275,10 +261,8 @@ describe('EnergyFlowManager', () => {
 
 				const {
 					efm,
-					powerRepo,
 				} = await setup(adapter, props, [aMockedDevice]);
 
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, 0.5);
 
 				const result = await efm.run();
 
@@ -302,10 +286,8 @@ describe('EnergyFlowManager', () => {
 
 					const {
 						efm,
-						powerRepo,
 					} = await setup(adapter, props, [aMockedDeviceToIgnore, aMockedDeviceStopped]);
 
-					await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, 0.5);
 
 					const result = await efm.run();
 
@@ -332,10 +314,7 @@ describe('EnergyFlowManager', () => {
 
 				const {
 					efm,
-					powerRepo,
 				} = await setup(adapter, props, [aMockedDeviceLowPrio, aMockedDeviceHighPrio]);
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, 0.5);
 
 				const result = await efm.run();
 
@@ -368,20 +347,17 @@ describe('EnergyFlowManager', () => {
 
 				const {
 					efm,
-					powerRepo,
 				} = await setup(adapter, props, [aMockedDeviceLowPrio2, aMockedDeviceHighPrio, aMockedDeviceLowPrio1]);
-
-				await adapter.setStateAsync(powerRepo.powerBalanceInternal.xid, 0.5);
 
 				const result = await efm.run();
 
 				expect(aMockedDeviceLowPrio2.start).not.to.have.been.called;
 				expect(result).to.eql([
+					{ automatedDevice: aMockedDeviceLowPrio1, action: DeviceAction.STARTED },
 					{ automatedDevice: aMockedDeviceHighPrio, action: DeviceAction.STARTED },
-					{ automatedDevice: aMockedDeviceLowPrio2, action: DeviceAction.STARTED },
 				]);
-				expect(aMockedDeviceLowPrio1.stop).to.have.been.called;
-				expect(aMockedDeviceHighPrio.stop).to.have.been.called;
+				expect(aMockedDeviceLowPrio1.start).to.have.been.called;
+				expect(aMockedDeviceHighPrio.start).to.have.been.called;
 
 			});
 		});

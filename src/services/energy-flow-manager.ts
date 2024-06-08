@@ -35,21 +35,21 @@ export class EnergyFlowManager {
 			return [];
 		}
 
-		const amountOfUnbalance = await this.powerRepo.powerBalanceInternal.getValue();
+		const amountOfUnbalanceAvg = await this.powerRepo.avg.powerBalance();
+		const amountOfUnbalanceCurrent = await this.powerRepo.current.powerBalance();
 
 		if (loss) {
-			if (amountOfUnbalance < 0) {
-				return await this.reduceLoad(amountOfUnbalance);
+			if (amountOfUnbalanceCurrent < 0) {
+				return await this.reduceLoad(amountOfUnbalanceCurrent);
 			}
-			console.error('Unexpected State. Loss detected but amountOfUnbalance is positive!?');
+			console.error('Unexpected State. Loss detected but amountOfUnbalanceCurrent is positive!?');
 		}
 
 		if (bonus) {
-			if (amountOfUnbalance > 0) {
-				// TODO use average value for bonus
-				return await this.increaseLoad(...);
+			if (amountOfUnbalanceAvg > 0) {
+				return await this.increaseLoad(amountOfUnbalanceAvg);
 			}
-			console.error('Unexpected State. Bonus detected but amountOfUnbalance is negative!?');
+			console.error('Unexpected State. Bonus detected but amountOfUnbalanceAvg is negative!?');
 		}
 
 		return [];
@@ -105,10 +105,25 @@ export class EnergyFlowManager {
 			return [];
 		}
 
-		candidates[0].start();
-		return [{ automatedDevice: candidates[0], action: DeviceAction.STARTED }];
+		let loadToUse = amountOfUnbalance;
+		const actions: Array<EnergyFlowManagerAdjustment> = [];
 
-		throw new Error('Not Implemented');
+		for (const device of candidates) {
+			if (loadToUse === 0) {
+				break; // balance is restored
+			}
+
+			const deviceEstimatedConsumption = await device.estimatedConsumption;
+			if (deviceEstimatedConsumption > loadToUse) {
+				continue;
+			}
+
+			await device.start();
+			actions.push({ automatedDevice: device, action: DeviceAction.STARTED });
+			loadToUse -= deviceEstimatedConsumption;
+		}
+
+		return actions;
 	}
 
 	private getOrderedCandidatesToStart() {
